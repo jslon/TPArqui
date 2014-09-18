@@ -12,12 +12,13 @@ import java.lang.Thread;
  */
 public class MIPS {
 
-    int   clock         = 0;
-    int[] datos         = new int[200];
-    int[] instrucciones = new int[400];
-    int[] registros     = new int[32];
-    int[] instruccion   = new int[4];
-    int   pc            = 0;
+    int     clock         = 0;
+    int[]   datos         = new int[200];
+    int[]   instrucciones = new int[400];
+    int[]   registros     = new int[32];
+    int[]   instruccion   = new int[4];
+    int     pc            = 0;
+    int[][] tablaReg      = new int[32][2]; //para que a ana no se le olvide que es para identificar conflictos
     
     
     
@@ -49,6 +50,8 @@ public class MIPS {
         Runnable instructionDecode = new Runnable(){
             public void run(){
                 System.out.println("ID");
+                //switch que identifique el OP
+                
             }
         };
         
