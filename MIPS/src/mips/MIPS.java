@@ -15,6 +15,11 @@ public class MIPS {
     int   clock         = 0;
     int[] datos         = new int[200];
     int[] instrucciones = new int[400];
+    int[] registros     = new int[32];
+    int[] instruccion   = new int[4];
+    int   pc            = 0;
+    
+    
     
     public static void main(String[] args) {
         MIPS mips = new MIPS();
@@ -26,36 +31,42 @@ public class MIPS {
         for (int i = 0; i <= 400; i++) {
         mips.instrucciones[i] = 0;
         }
-        //(new primaryThread()).start();
+        
+        //new Thread(instructionFetch).start();
         
         Runnable instructionFetch = new Runnable(){
             public void run(){
-            
+                //System.out.println("IF");
+                for(int i = 0; i <4 ; i++) {
+                    //instruccion[i] = instrucciones[(pc*4)+i];
+                    // copiamos los valores del vector de instrucciones al vector tamano jenny
+                }
+                
             }
         
         };
         
         Runnable instructionDecode = new Runnable(){
             public void run(){
-            
+                System.out.println("ID");
             }
         };
         
         Runnable execute = new Runnable(){
             public void run(){
-            
+                System.out.println("EX");
             }
         };
         
         Runnable memory = new Runnable(){
             public void run(){
-            
+                System.out.println("MEM");
             }
         };
         
         Runnable writeBack = new Runnable(){
             public void run(){
-            
+                System.out.println("WB");
             }
         };       
     }
@@ -108,4 +119,24 @@ public class MIPS {
          int resultado = -1;
         return resultado;
     }
+    
+    int jal(int n){
+         int resultado = -1;
+        return resultado;
+    }
+    
+    int jr(int rx){
+         int resultado = -1;
+        return resultado;
+    }
+    
+    
+    
+    boolean conflicto(){
+    
+    }
+    
+    
+    
+    
 }
