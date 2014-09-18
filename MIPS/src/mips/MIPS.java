@@ -12,35 +12,57 @@ import java.lang.Thread;
  */
 public class MIPS {
 
-    public static void main(String[] args) {
-        (new primaryThread())       .start();
-    }
-}
-
-class primaryThread extends Thread {
-    
     int   clock         = 0;
     int[] datos         = new int[200];
     int[] instrucciones = new int[400];
     
-    public void primaryThread(){
+    public static void main(String[] args) {
+        MIPS mips = new MIPS();
+        
         for(int i = 0; i <= 200; i++) {
-        datos[i] = 0;
+        mips.datos[i] = 0;
         }
         
         for (int i = 0; i <= 400; i++) {
-        instrucciones[i] = 0;
+        mips.instrucciones[i] = 0;
         }
+        //(new primaryThread()).start();
         
+        Runnable instructionFetch = new Runnable(){
+            public void run(){
+            
+            }
+        
+        };
+        
+        Runnable instructionDecode = new Runnable(){
+            public void run(){
+            
+            }
+        };
+        
+        Runnable execute = new Runnable(){
+            public void run(){
+            
+            }
+        };
+        
+        Runnable memory = new Runnable(){
+            public void run(){
+            
+            }
+        };
+        
+        Runnable writeBack = new Runnable(){
+            public void run(){
+            
+            }
+        };       
     }
-
-    public void run(){
-        (new instructionFetch())    .start();
-        (new instructionDecode())   .start();
-        (new execute())             .start();
-        (new memory())              .start();
-        (new writeBack())           .start();
-    }
+    
+    
+    
+    //Operaciones 
     
     int daddi(int ry, int rx, int n){
          int resultado = -1;
@@ -86,36 +108,4 @@ class primaryThread extends Thread {
          int resultado = -1;
         return resultado;
     }
-
 }
-
-class instructionFetch extends Thread {
-    public void run(){
-        System.out.println("IF");
-    }
-}
-
-class instructionDecode extends Thread {
-    public void run(){
-        System.out.println("ID");
-    }
-}
-
-class execute extends Thread {
-    public void run(){
-        System.out.println("EX");
-    }
-}
-
-class memory extends Thread {
-    public void run(){
-        System.out.println("MEM");
-    }
-}
-
-class writeBack extends Thread {
-    public void run(){
-        System.out.println("WB");
-    }
-}
-
