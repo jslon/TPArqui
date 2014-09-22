@@ -6,6 +6,9 @@
 
 package mips;
 import java.lang.Thread;
+import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 /**
  *
  * @author JoseSlon
@@ -25,17 +28,30 @@ public class MIPS {
     public static void main(String[] args) {
         MIPS mips = new MIPS();
         
-        for(int i = 0; i <= 200; i++) {
+        for(int i = 0; i < 200; i++) {
         mips.datos[i] = 0;
         }
         
-        for (int i = 0; i <= 400; i++) {
+        for (int i = 0; i < 400; i++) {
         mips.instrucciones[i] = 0;
         }
         
-        //new Thread(instructionFetch).start();
         
-        Runnable instructionFetch = new Runnable(){
+        //new Thread(instructionFetch).start();
+        Runnable principalThread = new Runnable(){
+            public void run(){
+                MIPS mips = new MIPS();
+                mips.cargarInstrucciones();
+                for(int i = 0; i < mips.instrucciones.length; i++ ) {
+                  System.out.println(Integer.toString(mips.instrucciones[i]));
+                }
+            }
+        };       
+    }
+    
+    //Hilillos
+    
+    Runnable instructionFetch = new Runnable(){
             public void run(){
                 //System.out.println("IF");
                 for(int i = 0; i <4 ; i++) {
@@ -71,10 +87,10 @@ public class MIPS {
             public void run(){
                 System.out.println("WB");
             }
-        };       
-    }
-    
-    
+        };
+        
+        
+        
     
     //Operaciones 
     
@@ -133,13 +149,24 @@ public class MIPS {
         return resultado;
     }
     
+
     
-    
-    boolean conflicto(){
-    
+    void cargarInstrucciones(){
+        try {
+            BufferedReader bf = new BufferedReader(new FileReader("HILO-1.txt"));
+            String linea = "";
+            int i = 0;
+            while ((linea = bf.readLine()) != null) {
+                String[] parts = linea.split("\\s");
+                for(String part : parts){
+                    instrucciones[i] = Integer.valueOf(part);
+                    i++;
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+        }      
     }
-    
-    
     
     
 }
