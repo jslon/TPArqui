@@ -15,82 +15,110 @@ import java.util.logging.Logger;
  */
 public class MIPS {
 
-    int     clock         = 0;
-    int[]   datos         = new int[200];
-    int[]   instrucciones = new int[400];
-    int[]   registros     = new int[32];
-    int[]   instruccion   = new int[4];
-    int     pc            = 0;
-    int[][] tablaReg      = new int[32][2]; //para que a ana no se le olvide que es para identificar conflictos
-    
+    static int     clock           = 0;
+    static int[]   datos           = new int[200];
+    static int[]   instrucciones   = new int[400];
+    static int[]   registros       = new int[32];
+    static int[]   instruccionIF   = new int[4];
+    static int[]   instruccionID   = new int[4];
+    static int[]   instruccionEX   = new int[4];
+    static int[]   instruccionMEM  = new int[4];
+    static int[]   instruccionWB   = new int[4];
+    static int     pc              = 0;
+    static int[][] tablaReg        = new int[32][2]; //para que a ana no se le olvide que es para identificar conflictos
+    static int[]   tablaEtapa      = new int[5];  //vector de banderas donde indican la finalización de cada etapa
     
     
     public static void main(String[] args) {
-        MIPS mips = new MIPS();
+        
         
         for(int i = 0; i < 200; i++) {
-        mips.datos[i] = 0;
+        datos[i] = 0;
         }
         
         for (int i = 0; i < 400; i++) {
-        mips.instrucciones[i] = 0;
+        instrucciones[i] = 0;
         }
         
-        
-        //new Thread(instructionFetch).start();
-        Runnable principalThread = new Runnable(){
-            public void run(){
-                MIPS mips = new MIPS();
-                mips.cargarInstrucciones();
-                for(int i = 0; i < mips.instrucciones.length; i++ ) {
-                  System.out.println(Integer.toString(mips.instrucciones[i]));
-                }
+        for(int i = 0 ; i < 32; i++) {
+            for(int j = 0; j < 2; j++){
+                tablaReg[i][0] = i;
+                tablaReg[i][1] = 0;
             }
-        };       
-    }
+        }
+        
+        //Hilos
     
-    //Hilillos
-    
-    Runnable instructionFetch = new Runnable(){
+     final Runnable instructionFetch = new Runnable(){
             public void run(){
+                tablaEtapa[0] = 1; //indica que acaba de iniciar
                 //System.out.println("IF");
-                for(int i = 0; i <4 ; i++) {
-                    //instruccion[i] = instrucciones[(pc*4)+i];
-                    // copiamos los valores del vector de instrucciones al vector tamano jenny
+                //System.out.println("El vector de if queda: ");
+                for(int i = 0; i < 4 ; i++) {
+                    instruccionIF[i] = instrucciones[(pc*4)+i];
+                    //System.out.println(instruccionIF[i]);
+                    
                 }
-                
+                tablaEtapa[0] = 0; //indica que terminó
             }
         
         };
         
-        Runnable instructionDecode = new Runnable(){
+        final Runnable instructionDecode = new Runnable(){
             public void run(){
+                tablaEtapa[1] = 1; //indica que acaba de iniciar
+                tablaEtapa[1] = 0; //indica que terminó
                 System.out.println("ID");
                 //switch que identifique el OP
                 
             }
         };
         
-        Runnable execute = new Runnable(){
+        final Runnable execute = new Runnable(){
             public void run(){
+                tablaEtapa[2] = 1; //indica que acaba de iniciar
+                tablaEtapa[2] = 0; //indica que terminó
                 System.out.println("EX");
             }
         };
         
-        Runnable memory = new Runnable(){
+        final Runnable memory = new Runnable(){
             public void run(){
+                tablaEtapa[3] = 1; //indica que acaba de iniciar
+                tablaEtapa[3] = 0; //indica que terminó
                 System.out.println("MEM");
             }
         };
         
-        Runnable writeBack = new Runnable(){
+        final Runnable writeBack = new Runnable(){
             public void run(){
+                tablaEtapa[4] = 1; //indica que acaba de iniciar
+                tablaEtapa[4] = 0; //indica que terminó
                 System.out.println("WB");
             }
         };
         
-        
-        
+        Runnable principalThread = new Runnable(){
+            public void run(){
+                MIPS mips = new MIPS();
+                mips.cargarInstrucciones();
+                
+                for(int i = 0; i < mips.instrucciones.length; i++ ) {
+                  System.out.println(Integer.toString(mips.instrucciones[i]));
+                }
+                
+                new Thread(instructionFetch).start();
+                new Thread(instructionDecode).start();
+                new Thread(execute).start();
+                new Thread(memory).start();
+                new Thread(writeBack).start();
+            }
+        };
+        new Thread(principalThread).start();
+    }      
+    
+    
+    
     
     //Operaciones 
     
