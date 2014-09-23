@@ -27,6 +27,10 @@ public class MIPS {
     static int     pc              = 0;
     static int[]   tablaReg        = new int[32]; //para que a ana no se le olvide que es para identificar conflictos
     static int[]   tablaEtapa      = new int[5];  //vector de banderas donde indican la finalización de cada etapa
+    static int resultadoEM         = 0; // EX le pasa el resultado a Mem
+    static int resultadoMem         = 0; // es el resultado para lw y sw
+    static int valMemoriaLW         = 0; //
+    static int resultadoMW         = 0; // de Men a Wb 
     
     
     public static void main(String[] args) {
@@ -82,8 +86,7 @@ public class MIPS {
                 for(int i = 0; i < 4; i++){
                     System.out.print(instruccionID[i]);
                 }
-                tablaEtapa[1] = 0; //indica que terminó
-
+                
                 //switch que identifique el OP
                 switch(opCode){
                     case 8: {                   //DADDI
@@ -100,22 +103,83 @@ public class MIPS {
                     }
                     case 32: {                  //DADD
                     
+                        if(tablaReg[op1] == 0 && tablaReg[op2] == 0  && tablaReg[op3]== 0){  //Si los registros op1,op2, op3 están libres
+                            if(tablaEtapa[2] == 0){             //Si EX está desocupado
+                                for(int i =0; i < 4; i++){
+                                    instruccionEX[i] = instruccionID[i];
+                                }
+                            }
+                            else{           //Si EX está ocupado
+                                //wait();
+                            }
+                        }
+                        
+                        
                     
                     }
                     case 34: {                  //DSUB
                     
+                           if(tablaReg[op1] == 0 && tablaReg[op2] == 0  && tablaReg[op3]== 0){  //Si los registros op1,op2, op3 están libres
+                            if(tablaEtapa[2] == 0){             //Si EX está desocupado
+                                for(int i =0; i < 4; i++){
+                                    instruccionEX[i] = instruccionID[i];
+                                }
+                            }
+                            else{           //Si EX está ocupado
+                                //wait();
+                            }
+                        }
+                        
+                                       
                     }
                     case 12: {                  //DMUL
                     
+                           if(tablaReg[op1] == 0 && tablaReg[op2] == 0  && tablaReg[op3]== 0){  //Si los registros op1,op2, op3 están libres
+                            if(tablaEtapa[2] == 0){             //Si EX está desocupado
+                                for(int i =0; i < 4; i++){
+                                    instruccionEX[i] = instruccionID[i];
+                                }
+                            }
+                            else{           //Si EX está ocupado
+                                //wait();
+                            }
+                        }
                     }
                     case 14: {                  //DDIV
-                    
+                       if(tablaReg[op1] == 0 && tablaReg[op2] == 0  && tablaReg[op3]== 0){  //Si los registros op1,op2, op3 están libres
+                            if(tablaEtapa[2] == 0){             //Si EX está desocupado
+                                for(int i =0; i < 4; i++){
+                                    instruccionEX[i] = instruccionID[i];
+                                }
+                            }
+                            else{           //Si EX está ocupado
+                                //wait();
+                            }
+                        }
                     }
                     case 35: {                  //LW
-                    
+                       if(tablaReg[op2] == 0 ){  //Si el registros op2 está libre
+                            if(tablaEtapa[2] == 0){             //Si EX está desocupado
+                                for(int i =0; i < 4; i++){
+                                    instruccionEX[i] = instruccionID[i];
+                                }
+                            }
+                            else{           //Si EX está ocupado
+                                //wait();
+                            }
+                        }
                     }
                     case 43: {                  //SW
-                    
+                       if(tablaReg[op1] == 0 && tablaReg[op2] == 0 ){  //Si los registros op1 y op2 están libres
+                            if(tablaEtapa[2] == 0){             //Si EX está desocupado
+                                for(int i =0; i < 4; i++){
+                                    instruccionEX[i] = instruccionID[i];
+                                }
+                            }
+                            else{           //Si EX está ocupado
+                                //wait();
+                            }
+                        }
                     }
                     case 4:  {                  //BEQZ
                     
@@ -130,16 +194,72 @@ public class MIPS {
                     
                     }
                     case 63: {                  //FIN
-                    
+                    //Avisa que esta terminando
                     }
                 }
-                
+             tablaEtapa[1] = 0; //indica que terminó   
             }
+            
         };
         
         final Runnable execute = new Runnable(){
             public void run(){
                 tablaEtapa[2] = 1; //indica que acaba de iniciar
+                int codigop = instruccionEX[0];
+                int op1 = instruccionEX[1];
+                int op2 = instruccionEX[2];
+                int op3 = instruccionEX[3];
+                int resultado =0;
+                
+                switch(codigop){
+                    case 8: {                   //DADDI
+                    resultado = daddi(op1,op2,op3);
+                    }
+                    case 32: {                  //DADD
+                     resultado = dadd(op1,op2,op3);
+                    }
+                    case 34: {                  //DSUB
+                     resultado = dsub(op1,op2,op3);               
+                    }
+                    case 12: {                  //DMUL
+                    resultado = dmul(op1,op2,op3);
+                             }
+                    case 14: {                  //DDIV
+                       resultado = ddiv(op1,op2,op3);
+                    }
+                    case 35: {                  //LW
+                       resultado = lw(op1,op2,op3);
+                    }
+                    case 43: {                  //SW
+                     resultado = sw(op1,op2,op3);
+                    }
+                    case 4:  {                  //BEQZ
+                    resultado = beqz(op1,op2,op3);
+                    }
+                    case 5:  {                  //BNEZ
+                    resultado = bnez(op1,op2,op3);
+                    }
+                    case 3:  {                  //JAL
+                    resultado = jal(op3);
+                    }
+                    case 2:  {                  //JR
+                    resultado = jr(op1);
+                    }
+                    case 63: {                  //FIN
+                    //Avisa que esta terminando
+                    }
+         
+                }
+                
+             if(tablaEtapa[3]== 0){
+                for(int i =0; i<4; i++)
+                {instruccionMEM[i] = instruccionEX[i];}
+                resultadoEM = resultado;
+                }
+             else {
+             // Aqui va el wait
+             }
+             
                 tablaEtapa[2] = 0; //indica que terminó
                 System.out.println("EX");
             }
@@ -148,6 +268,26 @@ public class MIPS {
         final Runnable memory = new Runnable(){
             public void run(){
                 tablaEtapa[3] = 1; //indica que acaba de iniciar
+                int op2 = instruccionMEM[0];
+                valMemoriaLW = resultadoEM;
+               
+                if (instruccionMEM[0] == 35 || instruccionMEM[0] == 43){
+                    resultadoMem = resultadoEM;
+                    if(instruccionMEM[0] == 43){ // este puede escribir
+                     datos[resultadoMem*4]= op2; //se le guarda el valor del registro
+                    }
+                    else{valMemoriaLW = datos[resultadoMem*4]; } //saca el valor de memoria y lo guarda en esta variable
+                }
+                
+                if(tablaEtapa[4] == 0){
+                    for(int i =0; i<4; i++){
+                        instruccionWB[i] = instruccionMEM[i];}
+                    resultadoMW = valMemoriaLW;
+                }
+                else{
+                    //wait
+                }
+              
                 tablaEtapa[3] = 0; //indica que terminó
                 System.out.println("MEM");
             }
@@ -156,6 +296,28 @@ public class MIPS {
         final Runnable writeBack = new Runnable(){
             public void run(){
                 tablaEtapa[4] = 1; //indica que acaba de iniciar
+                int codop = instruccionWB[0];
+                int op1 = instruccionWB[2];
+                int op2 = instruccionWB[2];
+                int op3 = instruccionWB[3];
+                
+                if (codop == 8 || codop == 35){
+                   registros[op2] = resultadoMW; 
+                }
+                else{
+                    registros[op3] = resultadoMW;// las operaciones aritmeticas de add, sub, mul y div
+                }
+                //Liberacion de los registros
+                if (codop == 8 || codop == 35){
+                tablaReg[op1] = 0;
+                tablaReg[op2] = 0; 
+                }
+                else{ // las operaciones aritmeticas de add, sub, mul y div
+                tablaReg[op1] = 0;
+                tablaReg[op2] = 0;
+                tablaReg[op3] = 0;
+                }
+                
                 tablaEtapa[4] = 0; //indica que terminó
                 System.out.println("WB");
             }
@@ -185,57 +347,57 @@ public class MIPS {
     
     //Operaciones 
     
-    int daddi(int ry, int rx, int n){
+    static int  daddi(int ry, int rx, int n){
          int resultado = -1;
         return resultado;
     }
     
-    int dadd(int ry, int rz, int rx){
+    static int dadd(int ry, int rz, int rx){
          int resultado = -1;
         return resultado;
     }
     
-    int dsub(int ry, int rz, int rx){
+    static int dsub(int ry, int rz, int rx){
          int resultado = -1;
         return resultado;
     }
     
-    int dmul(int ry, int rz, int rx){
+    static int dmul(int ry, int rz, int rx){
          int resultado = -1;
         return resultado;
     }
     
-    int ddiv(int ry, int rz, int rx){
+    static int ddiv(int ry, int rz, int rx){
          int resultado = -1;
         return resultado;
     }
     
-    int lw(int ry, int rx, int n){
+    static int lw(int ry, int rx, int n){
          int resultado = -1;
         return resultado;
     }
     
-    int sw(int ry, int rx, int n){
+    static int sw(int ry, int rx, int n){
          int resultado = -1;
         return resultado;
     }
     
-    int bnez(int rx, int label){
+    static int bnez(int rx, int label, int n){
          int resultado = -1;
         return resultado;
     }
     
-    int beqz(int rx, int label){
+    static int beqz(int rx, int label, int n){
          int resultado = -1;
         return resultado;
     }
     
-    int jal(int n){
+    static int jal(int n){
          int resultado = -1;
         return resultado;
     }
     
-    int jr(int rx){
+    static int jr(int rx){
          int resultado = -1;
         return resultado;
     }
@@ -258,6 +420,8 @@ public class MIPS {
             Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
         }      
     }
+    
+    
     
     
 }
