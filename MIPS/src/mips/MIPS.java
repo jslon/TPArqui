@@ -11,30 +11,27 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author JoseSlon
- */
 public class MIPS {
 
-    static int clock = 0;
-    static int[] datos = new int[200];
-    static int[] instrucciones = new int[400];
-    static int[] registros = new int[32];
-    static int[] instruccionIF = new int[4];
-    static int[] instruccionID = new int[4];
-    static int[] instruccionEX = new int[4];
+    static int   clock = 0;
+    static int[] datos          = new int[200];
+    static int[] instrucciones  = new int[400];
+    static int[] registros      = new int[32];
+    static int[] instruccionIF  = new int[4];
+    static int[] instruccionID  = new int[4];
+    static int[] instruccionEX  = new int[4];
     static int[] instruccionMEM = new int[4];
-    static int[] instruccionWB = new int[4];
-    static int pc = 0;
-    static int[] tablaReg = new int[32]; //para que a ana no se le olvide que es para identificar conflictos
-    static int[] banderaFin = new int[5];  //vector de banderas donde indican la finalización del programa para cada etapa
-    static int resultadoEM = 0; // EX le pasa el resultado a Mem
-    static int resultadoMem = 0; // es el resultado para lw y sw
-    static int valMemoriaLW = 0; //
-    static int resultadoMW = 0; // de Men a Wb 
-    private static Semaphore[] sem = new Semaphore[]{new Semaphore(1), new Semaphore(1), new Semaphore(1), new Semaphore(1), new Semaphore(1)};
-    private static Semaphore semGeneral = new Semaphore(0);
+    static int[] instruccionWB  = new int[4];
+    static int   pc             = 0;
+    static int[] tablaReg       = new int[32];                    
+    static int[] banderaFin     = new int[5];                     // indica la finalización del programa para cada etapa. 1 = FIN
+    static int   resultadoEM    = 0;                              // EX le pasa el resultado a Mem
+    static int   resultadoMem   = 0;                              // es el resultado para lw y sw
+    static int   valMemoriaLW   = 0;
+    static int   resultadoMW    = 0;                              // de Men a Wb 
+    private static Semaphore[] sem          = new Semaphore[]
+        {new Semaphore(1), new Semaphore(1), new Semaphore(1), new Semaphore(1), new Semaphore(1)};
+    private static Semaphore   semGeneral   = new Semaphore(0);
     
     
     public static void main(String[] args) {
@@ -58,31 +55,29 @@ public class MIPS {
         //Hilos
         final Runnable instructionFetch = new Runnable() {
             public void run() {
-                while (banderaFin[0] == 0) {
+                while (banderaFin[0] == 0) {        //mientras no tenga que finalizar
 
+                    // Copia la instrucción de la "memoria" al vector de instrucción de IF
                     for (int i = 0; i < 4; i++) {
                         instruccionIF[i] = instrucciones[(pc * 4) + i];
-                        //System.out.println(instruccionIF[i]);
-
                     }
+                    
+                    if (instruccionIF[0] == 63)	//Si la instrucción es FIN
+                        banderaFin[0] = 1;
 
                     try {
                         sem[0].acquire();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
-
-                    for (int i = 0; i < 4; i++) {
-                        instruccionID[i] = instruccionIF[i];
-                    }
                     
-                    pc++;                                                       //Aumenta en 1 el program counter
+                    // Copia la intrucción al vector de instrucción de la siguente etapa
+                    cambioEtapa(0);
                     
-                    if (instruccionIF[0] == 63) {
-                        banderaFin[0] = 1;
-                    }
+                    pc++;       //Aumenta en 1 el program counter
 
                     sem[0].release();
+
                     try {
                         semGeneral.acquire();
                     } catch (InterruptedException ex) {
@@ -102,18 +97,13 @@ public class MIPS {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    int opCode = instruccionID[0];
-                    int op1 = instruccionID[1];
-                    int op2 = instruccionID[2];
-                    int op3 = instruccionID[3];
+                    int opCode	= instruccionID[0];
+                    int op1 	= instruccionID[1];
+                    int op2 	= instruccionID[2];
+                    int op3 	= instruccionID[3];
 
-                    if (instruccionID[0] == 63) {
+                    if (instruccionID[0] == 63)
                         banderaFin[0] = 1;
-                    }
-
-                    for (int i = 0; i < 4; i++) {     //Imprime los valores del vector de instrucción
-                        System.out.print(instruccionID[i]);
-                    }
 
                     try {
                         sem[1].acquire();
@@ -123,77 +113,73 @@ public class MIPS {
 
                     //switch que identifique el OP
                     switch (opCode) {
-                        case 8: {                   //DADDI
+                        case (8): {                   	//DADDI
                             if (tablaReg[op1] == 0 && tablaReg[op2] == 0) {  //Si los registros op1 y op2 están libres
-                                for (int i = 0; i < 4; i++) {
-                                    instruccionEX[i] = instruccionID[i];
-                                }
+                                cambioEtapa(2);
                             }
                         }
-                        case 32: {                  //DADD
+
+                        case (32): {     				//DADD
 
                             if (tablaReg[op1] == 0 && tablaReg[op2] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
-                                for (int i = 0; i < 4; i++) {
-                                    instruccionEX[i] = instruccionID[i];
-                                }
+                                cambioEtapa(2);
                             }
                         }
-                        case 34: {                  //DSUB
+
+                        case (34): {     				//DSUB
 
                             if (tablaReg[op1] == 0 && tablaReg[op2] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
-                                for (int i = 0; i < 4; i++) {
-                                    instruccionEX[i] = instruccionID[i];
-                                }
+                                cambioEtapa(2);
                             }
                         }
-                        case 12: {                  //DMUL
+
+                        case (12): {     				//DMUL
 
                             if (tablaReg[op1] == 0 && tablaReg[op2] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
-                                for (int i = 0; i < 4; i++) {
-                                    instruccionEX[i] = instruccionID[i];
-                                }
+                                cambioEtapa(2);
                             }
                         }
-                        case 14: {                  //DDIV
+
+                        case (14): {     				//DDIV
+
                             if (tablaReg[op1] == 0 && tablaReg[op2] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
-                                for (int i = 0; i < 4; i++) {
-                                    instruccionEX[i] = instruccionID[i];
-                                }
+                                cambioEtapa(2);
                             }
                         }
-                        case 35: {                  //LW
-                            if (tablaReg[op2] == 0) {                                             //Si el registros op2 está libre
-                                for (int i = 0; i < 4; i++) {
-                                    instruccionEX[i] = instruccionID[i];
-                                }
+                        
+                        case 35: {                  	//LW
+                            if (tablaReg[op2] == 0) {	//Si el registro op2 está libre
+                                cambioEtapa(2);
                             }
                         }
-                        case 43: {                  //SW
-                            if (tablaReg[op1] == 0 && tablaReg[op2] == 0) {                       //Si los registros op1 y op2 están libres
-                                for (int i = 0; i < 4; i++) {
-                                    instruccionEX[i] = instruccionID[i];
-                                }
+
+                        case (43): {                   	//SW
+                            if (tablaReg[op1] == 0 && tablaReg[op2] == 0) {  //Si los registros op1 y op2 están libres
+                                cambioEtapa(2);
                             }
                         }
-                        case 4: {                  //BEQZ
+
+                        
+                        case 4: {                  		//BEQZ
 
                         }
-                        case 5: {                  //BNEZ
+                        case 5: {                  		//BNEZ
 
                         }
-                        case 3: {                  //JAL
+                        case 3: {                  		//JAL
 
                         }
-                        case 2: {                  //JR
+                        case 2: {                  		//JR
 
                         }
-                        case 63: {                  //FIN
+                        case 63: {                  	//FIN
                             //Avisa que esta terminando
                         }
                     }
 
                     sem[0].release();
                     sem[1].release();
+
                     try {
                         semGeneral.acquire();
                     } catch (InterruptedException ex) {
@@ -213,17 +199,16 @@ public class MIPS {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    int codigop = instruccionEX[0];
-                    int op1 = instruccionEX[1];
-                    int op2 = instruccionEX[2];
-                    int op3 = instruccionEX[3];
-                    int resultado = 0;
+                    int opCode 	= instruccionEX[0];
+                    int op1 		= instruccionEX[1];
+                    int op2 		= instruccionEX[2];
+                    int op3 		= instruccionEX[3];
+                    int resultado 	= 0;
 
-                    if (instruccionEX[0] == 63) {
+                    if (instruccionEX[0] == 63)
                         banderaFin[0] = 1;
-                    }
 
-                    switch (codigop) {
+                    switch (opCode) {
                         case 8: {                   //DADDI
                             resultado = daddi(op1, op2, op3);
                         }
@@ -269,14 +254,13 @@ public class MIPS {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    for (int i = 0; i < 4; i++) {
-                        instruccionMEM[i] = instruccionEX[i];
-                    }
+                    cambioEtapa(2);
 
                     resultadoEM = resultado;
 
                     sem[1].release();
                     sem[2].release();
+
                     try {
                         semGeneral.acquire();
                     } catch (InterruptedException ex) {
@@ -296,19 +280,23 @@ public class MIPS {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    int op2 = instruccionMEM[0];
-                    valMemoriaLW = resultadoEM;
-                    if (instruccionMEM[0] == 63) {
-                        banderaFin[0] = 1;
-                    }
+                    int opCode		= instruccionMEM[0];
+                    int op1			= instruccionMEM[1];
+                    int op2			= instruccionMEM[2];
+                    int op3			= instruccionMEM[3];
+                    valMemoriaLW 	= resultadoEM;
 
-                    if (instruccionMEM[0] == 35 || instruccionMEM[0] == 43) {
+                    if (opCode == 63)
+                        banderaFin[0] = 1;
+
+                    if (opCode == 35 || opCode == 43) {		//Si la instrucción es LW o SW
                         resultadoMem = resultadoEM;
-                        if (instruccionMEM[0] == 43) { // este puede escribir
-                            datos[resultadoMem * 4] = op2; //se le guarda el valor del registro
-                        } else {
+                        if (opCode == 43) {	// este puede escribir
+                            datos[resultadoMem * 4] = op2; //se le guarda el valor del registros
+                        }
+                        else { 							//saca el valor de memoria y lo guarda en esta variable
                             valMemoriaLW = datos[resultadoMem * 4];
-                        } //saca el valor de memoria y lo guarda en esta variable
+                        }
                     }
 
                     try {
@@ -317,13 +305,12 @@ public class MIPS {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    for (int i = 0; i < 4; i++) {
-                        instruccionWB[i] = instruccionMEM[i];
-                    }
+                    cambioEtapa(3);
                     resultadoMW = valMemoriaLW;
 
                     sem[3].release();
                     sem[4].release();
+
                     try {
                         semGeneral.acquire();
                     } catch (InterruptedException ex) {
@@ -344,30 +331,33 @@ public class MIPS {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    int codop = instruccionWB[0];
-                    int op1 = instruccionWB[2];
-                    int op2 = instruccionWB[2];
-                    int op3 = instruccionWB[3];
+                    int opCode 	= instruccionWB[0];
+                    int op1 	= instruccionWB[2];
+                    int op2 	= instruccionWB[2];
+                    int op3 	= instruccionWB[3];
 
-                    if (instruccionWB[0] == 63) {
+                    if (opCode == 63)
                         banderaFin[0] = 1;
-                    }
 
-                    if (codop == 8 || codop == 35) {
+                    if (opCode == 8 || opCode == 35) {
                         registros[op2] = resultadoMW;
-                    } else {
-                        registros[op3] = resultadoMW;// las operaciones aritmeticas de add, sub, mul y div
+                    }
+                    else {
+                        registros[op3] = resultadoMW;			// las operaciones aritmeticas de add, sub, mul y ddiv  		***********(¿Qué pasa con el 63?)**************
                     }
                     //Liberacion de los registros
-                    if (codop == 8 || codop == 35) {
+                    if (opCode == 8 || opCode == 35) {
                         tablaReg[op1] = 0;
                         tablaReg[op2] = 0;
-                    } else { // las operaciones aritmeticas de add, sub, mul y div
+                    } 
+                    else { // las operaciones aritmeticas de add, sub, mul y div
                         tablaReg[op1] = 0;
                         tablaReg[op2] = 0;
                         tablaReg[op3] = 0;
                     }
+
                     sem[4].release();
+                    
                     try {
                         semGeneral.acquire();
                     } catch (InterruptedException ex) {
@@ -380,11 +370,10 @@ public class MIPS {
 
         Runnable principalThread = new Runnable() {
             public void run() {
-                MIPS mips = new MIPS();
-                mips.cargarInstrucciones();
-
-                for (int i = 0; i < mips.instrucciones.length; i++) {
-                    System.out.println(Integer.toString(mips.instrucciones[i]));
+                cargarInstrucciones();
+                
+                for (int i = 0; i < instrucciones.length; i++) {
+                    System.out.println(Integer.toString(instrucciones[i]));
                 }
 
                 new Thread(instructionFetch).start();
@@ -401,16 +390,10 @@ public class MIPS {
                         //sleep
                         
                     }
-                    
-                    
-                    
-                    
                 }
-                
-                
-                
             }
         };
+        
         new Thread(principalThread).start();
     }
 
@@ -470,7 +453,7 @@ public class MIPS {
         return resultado;
     }
 
-    void cargarInstrucciones() {
+    static void cargarInstrucciones() {
         try {
             BufferedReader bf = new BufferedReader(new FileReader("HILO-1.txt"));
             String linea = "";
@@ -485,6 +468,37 @@ public class MIPS {
         } catch (IOException ex) {
             Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+
+    static void cambioEtapa(int x) {
+    	switch (x) {
+
+    		//IF a ID
+    		case 0:
+    			for (int i = 0; i < 4; i++) {
+                	instruccionID[i] = instruccionIF[i];
+                }
+
+    		// ID a EX
+    		case 1:
+    			for (int i = 0; i < 4; i++) {
+                	instruccionEX[i] = instruccionID[i];
+                }
+
+    		// EX a MEM
+    		case 2:
+    			for (int i = 0; i < 4; i++) {
+                	instruccionMEM[i] = instruccionEX[i];
+                }
+
+    		// MEM a WB
+    		case 3:
+    			for (int i = 0; i < 4; i++) {
+            		instruccionWB[i] = instruccionMEM[i];
+            	}
+    	}
+
     }
 
 }
