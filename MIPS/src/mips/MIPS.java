@@ -399,37 +399,37 @@ public class MIPS {
 
     //Operaciones 
     static int daddi(int ry, int rx, int n) {
-        int resultado = -1;
+        int resultado = ry + n;
         return resultado;
     }
 
     static int dadd(int ry, int rz, int rx) {
-        int resultado = -1;
+        int resultado = ry + rz;
         return resultado;
     }
 
     static int dsub(int ry, int rz, int rx) {
-        int resultado = -1;
+        int resultado = ry - rz;
         return resultado;
     }
 
     static int dmul(int ry, int rz, int rx) {
-        int resultado = -1;
+        int resultado = ry * rz;;
         return resultado;
     }
 
     static int ddiv(int ry, int rz, int rx) {
-        int resultado = -1;
+        int resultado = ry / rz;;
         return resultado;
     }
 
     static int lw(int ry, int rx, int n) {
-        int resultado = -1;
+        int resultado = n + ry;
         return resultado;
     }
 
     static int sw(int ry, int rx, int n) {
-        int resultado = -1;
+        int resultado = n + ry;
         return resultado;
     }
 
@@ -444,18 +444,18 @@ public class MIPS {
     }
 
     static int jal(int n) {
-        int resultado = -1;
+        int resultado = n;
         return resultado;
     }
 
     static int jr(int rx) {
-        int resultado = -1;
+        int resultado = rx;
         return resultado;
     }
 
     static void cargarInstrucciones() {
         try {
-            BufferedReader bf = new BufferedReader(new FileReader("HILO-1.txt"));
+            BufferedReader bf = new BufferedReader(new FileReader("HILO-A.txt"));
             String linea = "";
             int i = 0;
             while ((linea = bf.readLine()) != null) {
