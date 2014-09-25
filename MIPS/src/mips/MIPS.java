@@ -75,7 +75,9 @@ public class MIPS {
                     for (int i = 0; i < 4; i++) {
                         instruccionID[i] = instruccionIF[i];
                     }
-
+                    
+                    pc++;                                                       //Aumenta en 1 el program counter
+                    
                     if (instruccionIF[0] == 63) {
                         banderaFin[0] = 1;
                     }
@@ -391,6 +393,19 @@ public class MIPS {
                 new Thread(memory).start();
                 new Thread(writeBack).start();
                 
+                while(banderaFin[0] == 0 && banderaFin[1] == 0 && banderaFin[2] == 0 && banderaFin[3] == 0 && banderaFin[4] == 0) { 
+                    if (semGeneral.availablePermits() == -5) {
+                        semGeneral.release(10);
+                    }
+                    else {
+                        //sleep
+                        
+                    }
+                    
+                    
+                    
+                    
+                }
                 
                 
                 
