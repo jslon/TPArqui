@@ -7,6 +7,8 @@ package mips;
 
 import java.lang.Thread;
 import java.io.*;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,8 +32,9 @@ public class MIPS {
     static int   valMemoriaLW   = 0;
     static int   resultadoMW    = 0;                              // de Men a Wb 
     private static Semaphore[] sem          = new Semaphore[]
-        {new Semaphore(1), new Semaphore(1), new Semaphore(1), new Semaphore(1), new Semaphore(1)};
+        {new Semaphore(1), new Semaphore(1), new Semaphore(1), new Semaphore(1)};
     private static Semaphore   semGeneral   = new Semaphore(0);
+    static CyclicBarrier barrier = new CyclicBarrier(5);
     
     
     public static void main(String[] args) {
@@ -56,33 +59,58 @@ public class MIPS {
         final Runnable instructionFetch = new Runnable() {
             public void run() {
                 while (banderaFin[0] == 0) {        //mientras no tenga que finalizar
-
+                    
+                    System.out.println("PC: "+pc);
+                    
+                    
                     // Copia la instrucción de la "memoria" al vector de instrucción de IF
                     for (int i = 0; i < 4; i++) {
                         instruccionIF[i] = instrucciones[(pc * 4) + i];
                     }
                     
+                    pc++;
+                    
+                    System.out.println("Instruccion en IF:\t");
+                    for (int i =0; i<4; i++) {
+                        System.out.println(instruccionIF[i]+"\t");
+                    }
+                    
+                    
                     if (instruccionIF[0] == 63)	//Si la instrucción es FIN
                         banderaFin[0] = 1;
-
+                    
+                    System.out.println("llegue aqui :)");
                     try {
                         sem[0].acquire();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     
+                    
                     // Copia la intrucción al vector de instrucción de la siguente etapa
                     cambioEtapa(0);
+
                     
-                    pc++;       //Aumenta en 1 el program counter
+                    
+                     sem[0].release();
+                    
+                    try {
+                        barrier.await();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
+                   
 
-                    sem[0].release();
-
+                    /*
                     try {
                         semGeneral.acquire();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    */
                 }
             }
         };
@@ -90,7 +118,6 @@ public class MIPS {
         final Runnable instructionDecode = new Runnable() {
             public void run() {
                 while (banderaFin[1] == 0) {
-
                     try {
                         sem[0].acquire();
                     } catch (InterruptedException ex) {
@@ -101,6 +128,11 @@ public class MIPS {
                     int op1 	= instruccionID[1];
                     int op2 	= instruccionID[2];
                     int op3 	= instruccionID[3];
+                    
+                    System.out.println("Instruccion en ID:\t");
+                    for (int i =0; i<4; i++) {
+                        System.out.println(instruccionID[i]+"\t");
+                    }
 
                     if (instruccionID[0] == 63)
                         banderaFin[0] = 1;
@@ -176,15 +208,30 @@ public class MIPS {
                             //Avisa que esta terminando
                         }
                     }
-
+                    System.out.println("llegué a ID");
+                    
                     sem[0].release();
                     sem[1].release();
+                    
+                    
+                    
+                    try {
+                        barrier.await();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
+                    
 
+                    /*
                     try {
                         semGeneral.acquire();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    */
                 }
             }
 
@@ -199,11 +246,16 @@ public class MIPS {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    int opCode 	    = instruccionEX[0];
+                    int opCode          = instruccionEX[0];
                     int op1 		= instruccionEX[1];
                     int op2 		= instruccionEX[2];
                     int op3 		= instruccionEX[3];
                     int resultado 	= 0;
+                    
+                    System.out.println("Instruccion en EX:\t");
+                    for (int i =0; i<4; i++) {
+                        System.out.println(instruccionEX[i]+"\t");
+                    }
 
                     if (instruccionEX[0] == 63)
                         banderaFin[0] = 1;
@@ -257,15 +309,27 @@ public class MIPS {
                     cambioEtapa(2);
 
                     resultadoEM = resultado;
-
+                    
                     sem[1].release();
                     sem[2].release();
+                    
+                    try {
+                        barrier.await();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
+                    
 
+                     /*
                     try {
                         semGeneral.acquire();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    */
                 }
             }
         };
@@ -273,7 +337,7 @@ public class MIPS {
         final Runnable memory = new Runnable() {
             public void run() {
                 while (banderaFin[3] == 0) {
-
+                    
                     try {
                         sem[2].acquire();
                     } catch (InterruptedException ex) {
@@ -285,6 +349,11 @@ public class MIPS {
                     int op2		= instruccionMEM[2];
                     int op3		= instruccionMEM[3];
                     valMemoriaLW 	= resultadoEM;
+                    
+                    System.out.println("Instruccion en MEM:\t");
+                    for (int i =0; i<4; i++) {
+                        System.out.println(instruccionMEM[i]+"\t");
+                    }
 
                     if (opCode == 63)
                         banderaFin[0] = 1;
@@ -299,6 +368,8 @@ public class MIPS {
                         }
                     }
 
+                    
+                    System.out.println("llegué a ID");
                     try {
                         sem[3].acquire();
                     } catch (InterruptedException ex) {
@@ -310,12 +381,24 @@ public class MIPS {
 
                     sem[3].release();
                     sem[4].release();
-
+                    
+                    try {
+                        barrier.await();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
+                    
+                    
+                    /*
                     try {
                         semGeneral.acquire();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    */
 
                 }
             }
@@ -324,7 +407,6 @@ public class MIPS {
         final Runnable writeBack = new Runnable() {
             public void run() {
                 while (banderaFin[4] == 0) {
-
                     try {
                         sem[4].acquire();
                     } catch (InterruptedException ex) {
@@ -335,6 +417,11 @@ public class MIPS {
                     int op1 	= instruccionWB[2];
                     int op2 	= instruccionWB[2];
                     int op3 	= instruccionWB[3];
+                    
+                    System.out.println("Instruccion en WB:\t");
+                    for (int i =0; i<4; i++) {
+                        System.out.println(instruccionWB[i]+"\t");
+                    }
 
                     if (opCode == 63)
                         banderaFin[0] = 1;
@@ -355,14 +442,27 @@ public class MIPS {
                         tablaReg[op2] = 0;
                         tablaReg[op3] = 0;
                     }
-
+                    
                     sem[4].release();
                     
+                    System.out.println("llegué a WB");
+                    
+                    try {
+                        barrier.await();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                   
+                    
+                    /*
                     try {
                         semGeneral.acquire();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                            */
 
                 }
             }
@@ -370,29 +470,27 @@ public class MIPS {
 
         Runnable mainThread = new Runnable() {
             public void run() {
+                
+                
                 cargarInstrucciones();
                 
-                
                 imprimirVecInstrucciones();
+                System.out.print("\n\n");
                 
                 // inicia los hilos
-                new Thread(instructionFetch).start();
-                new Thread(instructionDecode).start();
-                new Thread(execute).start();
-                new Thread(memory).start();
                 new Thread(writeBack).start();
-                
+                new Thread(memory).start();
+                new Thread(execute).start();
+                new Thread(instructionDecode).start();
+                new Thread(instructionFetch).start();
+
+                  
                 while(banderaFin[0] == 0 && banderaFin[1] == 0 && banderaFin[2] == 0 && banderaFin[3] == 0 && banderaFin[4] == 0) { 
-                    if (semGeneral.availablePermits() == -5) {
-                        semGeneral.release(10);
-                    }
-                    else {
-                        //sleep
-                        
-                    }
+                    
                 }
 
                 imprimirVecDatos();
+                System.exit(clock);
             }
         };
         
@@ -474,17 +572,19 @@ public class MIPS {
 
     static void imprimirVecInstrucciones(){
         for (int i = 0; i < instrucciones.length; i++) {
-            System.out.println(Integer.toString(instrucciones[i])+"\t");
-                if(i%4 == 0)               //Si es múltiplo de 4       
-                    System.out.println("\n");   //cambio de linea
+            if(i%4 == 0)               //Si es múltiplo de 4       
+                    System.out.print("\n");   //cambio de linea
+            System.out.print(Integer.toString(instrucciones[i])+"\t");
+                
         }
     }
 
     static void imprimirVecDatos(){
         for (int i = 0; i < datos.length; i++) {
-            System.out.println(Integer.toString(datos[i])+"\t");
-                if(i%4 == 0)               //Si es múltiplo de 4       
-                    System.out.println("\n");   //cambio de linea
+             if(i%4 == 0)               //Si es múltiplo de 4       
+                    System.out.print("\n");   //cambio de linea
+            System.out.print(Integer.toString(datos[i])+"/t");
+               
         }
     }
 
