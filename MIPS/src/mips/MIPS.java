@@ -199,7 +199,7 @@ public class MIPS {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    int opCode 	= instruccionEX[0];
+                    int opCode 	    = instruccionEX[0];
                     int op1 		= instruccionEX[1];
                     int op2 		= instruccionEX[2];
                     int op3 		= instruccionEX[3];
@@ -281,9 +281,9 @@ public class MIPS {
                     }
 
                     int opCode		= instruccionMEM[0];
-                    int op1			= instruccionMEM[1];
-                    int op2			= instruccionMEM[2];
-                    int op3			= instruccionMEM[3];
+                    int op1             = instruccionMEM[1];
+                    int op2		= instruccionMEM[2];
+                    int op3		= instruccionMEM[3];
                     valMemoriaLW 	= resultadoEM;
 
                     if (opCode == 63)
@@ -368,14 +368,14 @@ public class MIPS {
             }
         };
 
-        Runnable principalThread = new Runnable() {
+        Runnable mainThread = new Runnable() {
             public void run() {
                 cargarInstrucciones();
                 
-                for (int i = 0; i < instrucciones.length; i++) {
-                    System.out.println(Integer.toString(instrucciones[i]));
-                }
-
+                
+                imprimirVecInstrucciones();
+                
+                // inicia los hilos
                 new Thread(instructionFetch).start();
                 new Thread(instructionDecode).start();
                 new Thread(execute).start();
@@ -391,10 +391,12 @@ public class MIPS {
                         
                     }
                 }
+
+                imprimirVecDatos();
             }
         };
         
-        new Thread(principalThread).start();
+        new Thread(mainThread).start();
     }
 
     //Operaciones 
@@ -455,7 +457,7 @@ public class MIPS {
 
     static void cargarInstrucciones() {
         try {
-            BufferedReader bf = new BufferedReader(new FileReader("HILO-1.txt"));
+            BufferedReader bf = new BufferedReader(new FileReader("HILO-B-v2.txt"));
             String linea = "";
             int i = 0;
             while ((linea = bf.readLine()) != null) {
@@ -470,6 +472,21 @@ public class MIPS {
         }
     }
 
+    static void imprimirVecInstrucciones(){
+        for (int i = 0; i < instrucciones.length; i++) {
+            System.out.println(Integer.toString(instrucciones[i])+"\t");
+                if(i%4 == 0)               //Si es múltiplo de 4       
+                    System.out.println("\n");   //cambio de linea
+        }
+    }
+
+    static void imprimirVecDatos(){
+        for (int i = 0; i < datos.length; i++) {
+            System.out.println(Integer.toString(datos[i])+"\t");
+                if(i%4 == 0)               //Si es múltiplo de 4       
+                    System.out.println("\n");   //cambio de linea
+        }
+    }
 
     static void cambioEtapa(int x) {
     	switch (x) {
