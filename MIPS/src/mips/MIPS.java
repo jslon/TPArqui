@@ -89,10 +89,6 @@ public class MIPS {
                     
                     // Copia la intrucción al vector de instrucción de la siguente etapa
                     cambioEtapa(0);
-
-                    
-                    
-                     sem[0].release();
                     
                     try {
                         barrier.await();
@@ -118,12 +114,7 @@ public class MIPS {
         final Runnable instructionDecode = new Runnable() {
             public void run() {
                 while (banderaFin[1] == 0) {
-                    try {
-                        sem[0].acquire();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
+                    
                     int opCode	= instruccionID[0];
                     int op1 	= instruccionID[1];
                     int op2 	= instruccionID[2];
@@ -211,9 +202,6 @@ public class MIPS {
                     System.out.println("llegué a ID");
                     
                     sem[0].release();
-                    sem[1].release();
-                    
-                    
                     
                     try {
                         barrier.await();
@@ -240,11 +228,7 @@ public class MIPS {
         final Runnable execute = new Runnable() {
             public void run() {
                 while (banderaFin[2] == 0) {
-                    try {
-                        sem[1].acquire();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    
 
                     int opCode          = instruccionEX[0];
                     int op1 		= instruccionEX[1];
@@ -300,18 +284,12 @@ public class MIPS {
 
                     }
 
-                    try {
-                        sem[2].acquire();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
+                    
                     cambioEtapa(2);
 
                     resultadoEM = resultado;
                     
                     sem[1].release();
-                    sem[2].release();
                     
                     try {
                         barrier.await();
@@ -468,7 +446,8 @@ public class MIPS {
             }
         };
 
-        Runnable mainThread = new Runnable() {
+        Runnable mainThread;
+        mainThread = new Runnable() {
             public void run() {
                 
                 
@@ -476,6 +455,14 @@ public class MIPS {
                 
                 imprimirVecInstrucciones();
                 System.out.print("\n\n");
+                try {
+                    sem[0].acquire();
+                    sem[1].acquire();
+                    sem[2].acquire();
+                    sem[3].acquire();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 
                 // inicia los hilos
                 new Thread(writeBack).start();
@@ -483,8 +470,8 @@ public class MIPS {
                 new Thread(execute).start();
                 new Thread(instructionDecode).start();
                 new Thread(instructionFetch).start();
-
-                  
+                
+                
                 while(banderaFin[0] == 0 && banderaFin[1] == 0 && banderaFin[2] == 0 && banderaFin[3] == 0 && banderaFin[4] == 0) { 
                     
                 }
@@ -499,37 +486,37 @@ public class MIPS {
 
     //Operaciones 
     static int daddi(int ry, int rx, int n) {
-        int resultado = -1;
+        int resultado = ry + n;
         return resultado;
     }
 
     static int dadd(int ry, int rz, int rx) {
-        int resultado = -1;
+        int resultado = ry + rz;
         return resultado;
     }
 
     static int dsub(int ry, int rz, int rx) {
-        int resultado = -1;
+        int resultado = ry - rz;
         return resultado;
     }
 
     static int dmul(int ry, int rz, int rx) {
-        int resultado = -1;
+        int resultado = ry * rz;;
         return resultado;
     }
 
     static int ddiv(int ry, int rz, int rx) {
-        int resultado = -1;
+        int resultado = ry / rz;;
         return resultado;
     }
 
     static int lw(int ry, int rx, int n) {
-        int resultado = -1;
+        int resultado = n + ry;
         return resultado;
     }
 
     static int sw(int ry, int rx, int n) {
-        int resultado = -1;
+        int resultado = n + ry;
         return resultado;
     }
 
@@ -544,17 +531,18 @@ public class MIPS {
     }
 
     static int jal(int n) {
-        int resultado = -1;
+        int resultado = n;
         return resultado;
     }
 
     static int jr(int rx) {
-        int resultado = -1;
+        int resultado = rx;
         return resultado;
     }
 
     static void cargarInstrucciones() {
         try {
+
             BufferedReader bf = new BufferedReader(new FileReader("HILO-B-v2.txt"));
             String linea = "";
             int i = 0;
