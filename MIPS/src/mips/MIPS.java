@@ -61,37 +61,28 @@ public class MIPS {
         //Hilos
         final Runnable instructionFetch = new Runnable() {
             public void run() {
-                while (banderaFin[0] == 0) {
-                    /*try {
-                        //mientras no tenga que finalizar
-
-                        barrier.await();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }*/
+                while (banderaFin[0] == 0) {        //mientras no tenga que finalizar
 
                     System.out.println("PC: " + pc);
 
                     // Copia la instrucción de la "memoria" al vector de instrucción de IF
                     for (int i = 0; i < 4; i++) {
-                        instruccionIF[i] = instrucciones[(pc) + i];
+                        instruccionIF[i] = instrucciones[(pc * 4) + i];
                     }
 
-                    pc += 4;
+                    pc++;
 
                     System.out.println("Instruccion en IF:\t");
                     for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionIF[i] + "\t");
+                        System.out.println(instruccionIF[i] + "\t");
                     }
-                    System.out.println("");
 
                     if (instruccionIF[0] == 63) //Si la instrucción es FIN
                     {
                         banderaFin[0] = 1;
                     }
-                    
+
+                    System.out.println("llegue aqui :)");
                     try {
                         sem[0].acquire();
                     } catch (InterruptedException ex) {
@@ -110,34 +101,12 @@ public class MIPS {
                     }
 
                 }
-
-                while (banderaFin[4] == 0) {
-                    try {
-                        //barrier.await();
-                        barrier.await();
-                        System.out.println("Espero a WB\t");
-                        barrier.await();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-
             }
         };
 
         final Runnable instructionDecode = new Runnable() {
             public void run() {
                 while (banderaFin[1] == 0) {
-
-                    /*try {
-                        barrier.await();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }*/
 
                     int opCode = instruccionID[0];
                     int op1 = instruccionID[1];
@@ -146,15 +115,14 @@ public class MIPS {
 
                     System.out.println("Instruccion en ID:\t");
                     for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionID[i] + "\t");
-                    }
-                    System.out.println("");
-
-                    if (opCode == 63) {
-                        cambioEtapa(1);
-                        banderaFin[1] = 1;
+                        System.out.println(instruccionID[i] + "\t");
                     }
 
+                    if (instruccionID[0] == 63) {
+                        banderaFin[0] = 1;
+                    }
+
+                    System.out.println("Semaforo[1]:" + sem[1].availablePermits());
                     try {
                         sem[1].acquire();
                     } catch (InterruptedException ex) {
@@ -166,6 +134,7 @@ public class MIPS {
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    System.out.println("Semaforo[1]:" + sem[1].availablePermits());
 
                     //switch que identifique el OP
                     if (opCode == 8) {
@@ -174,9 +143,9 @@ public class MIPS {
                         }
                     }
                     if (opCode == 35) {
-                        if (tablaReg[op2] == 0) {	//Si el registro op2 está libre
-                            cambioEtapa(1);
-                        }
+                            if (tablaReg[op2] == 0) {	//Si el registro op2 está libre
+                                cambioEtapa(1);
+                            }
                     }
                     if (opCode == 32) {
                         if (tablaReg[op1] == 0 && tablaReg[op2] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
@@ -184,411 +153,347 @@ public class MIPS {
                         }
                     }
                     if (opCode == 12) {
-                        if (tablaReg[op1] == 0 && tablaReg[op2] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
-                            cambioEtapa(1);
-                        }
+                                                    if (tablaReg[op1] == 0 && tablaReg[op2] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
+                                cambioEtapa(1);
+                            }
                     }
                     if (opCode == 14) {
-                        if (tablaReg[op1] == 0 && tablaReg[op2] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
-                            cambioEtapa(1);
-                        }
+                                                    if (tablaReg[op1] == 0 && tablaReg[op2] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
+                                cambioEtapa(1);
+                            }
                     }
                     if (opCode == 34) {
                         if (tablaReg[op1] == 0 && tablaReg[op2] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
-                            cambioEtapa(1);
-                        }
+                                cambioEtapa(1);
+                            }
                     }
                     if (opCode == 43) {
-                        if (tablaReg[op1] == 0 && tablaReg[op2] == 0) {  //Si los registros op1 y op2 están libres
-                            cambioEtapa(1);
+                                                    if (tablaReg[op1] == 0 && tablaReg[op2] == 0) {  //Si los registros op1 y op2 están libres
+                                cambioEtapa(1);
+                            }
+                    }
+
+
+                        //Falta Agregar IFS para estos casos
+                        /*case 4: {                  		//BEQZ
+
                         }
-                    }
-                    if (opCode == 4){                           //BEQZ
-                    }
-                    if (opCode == 5){                           //BNEZ
-                    }
-                    if (opCode == 3){                           //JAL
-                    }
-                    if (opCode == 2){                           //JR
-                    }
+                        case 5: {                  		//BNEZ
+
+                        }
+                        case 3: {                  		//JAL
+
+                        }
+                        case 2: {                  		//JR
+
+                        }
+                        case 63: {                  	//FIN
+                            //Avisa que esta terminando
+                        }*/
+                    
 
                     sem[1].release();
-                    sem[0].release();
-                    semReg.release();
-                    try {
-                        barrier.await();
-                        barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                }
-
-                while (banderaFin[4] == 0) {
-                    try {
-                        //barrier.await();
-                        barrier.await();
-                        System.out.println("Espero a WB\t");
-                        barrier.await();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                sem[0].release();
+                semReg.release();
+                System.out.println("Semaforo[1]:" + sem[1].availablePermits());
+                try {
+                    barrier.await();
+                    barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (BrokenBarrierException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
             }
+        }
 
-        };
+    }
+    ;
 
         final Runnable execute = new Runnable() {
-            public void run() {
-                while (banderaFin[2] == 0) {
+        public void run() {
+            while (banderaFin[2] == 0) {
 
-                    /*try {
-                        barrier.await();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }*/
+                int opCode = instruccionEX[0];
+                int op1 = instruccionEX[1];
+                int op2 = instruccionEX[2];
+                int op3 = instruccionEX[3];
+                int resultado = 0;
 
-                    int opCode = instruccionEX[0];
-                    int op1 = instruccionEX[1];
-                    int op2 = instruccionEX[2];
-                    int op3 = instruccionEX[3];
-                    int resultado = 0;
+                System.out.println("Instruccion en EX:\t");
+                for (int i = 0; i < 4; i++) {
+                    System.out.println(instruccionEX[i] + "\t");
+                }
 
-                    System.out.println("Instruccion en EX:\t");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionEX[i] + "\t");
-                    }
-                    System.out.println("");
+                if (instruccionEX[0] == 63) {
+                    banderaFin[0] = 1;
+                }
 
-                    if (opCode == 63) {
-                        banderaFin[2] = 1;
-                    }
-
-                    if (opCode == 8) {    //DADDI
+                switch (opCode) {
+                    case 8: {                   //DADDI
                         resultado = daddi(op1, op2, op3);
                     }
-                    if (opCode == 32) {   //DADD
+                    case 32: {                  //DADD
                         resultado = dadd(op1, op2, op3);
                     }
-                    if (opCode == 34) {   //DSUB
+                    case 34: {                  //DSUB
                         resultado = dsub(op1, op2, op3);
                     }
-                    if (opCode == 12) {                  //DMUL
+                    case 12: {                  //DMUL
                         resultado = dmul(op1, op2, op3);
                     }
-                    if (opCode == 14) {                  //DDIV
+                    case 14: {                  //DDIV
                         resultado = ddiv(op1, op2, op3);
                     }
-                    if (opCode == 35) {                  //LW
+                    case 35: {                  //LW
                         resultado = lw(op1, op2, op3);
                     }
-                    if (opCode == 43) {                  //SW
+                    case 43: {                  //SW
                         resultado = sw(op1, op2, op3);
                     }
-                    if (opCode == 4) {                  //BEQZ
+                    case 4: {                  //BEQZ
                         resultado = beqz(op1, op2, op3);
                     }
-                    if (opCode == 5) {                  //BNEZ
+                    case 5: {                  //BNEZ
                         resultado = bnez(op1, op2, op3);
                     }
-                    if (opCode == 3) {                  //JAL
+                    case 3: {                  //JAL
                         resultado = jal(op3);
                     }
-                    if (opCode == 2) {                  //JR
+                    case 2: {                  //JR
                         resultado = jr(op1);
                     }
-                    if (opCode == 63) {                  //FIN
-                    }
-
-                    try {
-                        sem[2].acquire();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                    cambioEtapa(2);
-                    resultadoEM = resultado;
-
-                    sem[2].release();
-                    sem[1].release();
-
-                    try {
-                        barrier.await();
-                        barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    case 63: {                  //FIN
+                        //Avisa que esta terminando
                     }
 
                 }
 
-                while (banderaFin[4] == 0) {
-                    try {
-                       // barrier.await();
-                        barrier.await();
-                        barrier.await();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                try {
+                    sem[2].acquire();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                cambioEtapa(2);
+                resultadoEM = resultado;
+
+                sem[2].release();
+                sem[1].release();
+
+                try {
+                    barrier.await();
+                    barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (BrokenBarrierException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
             }
-        };
+        }
+    };
 
-        final Runnable memory = new Runnable() {
-            public void run() {
-                while (banderaFin[3] == 0) {
+    final Runnable memory = new Runnable() {
+        public void run() {
+            while (banderaFin[3] == 0) {
 
-                    /*try {
-                        barrier.await();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }*/
+                int opCode = instruccionMEM[0];
+                int op1 = instruccionMEM[1];
+                int op2 = instruccionMEM[2];
+                int op3 = instruccionMEM[3];
+                valMemoriaLW = resultadoEM;
 
-                    int opCode = instruccionMEM[0];
-                    int op1 = instruccionMEM[1];
-                    int op2 = instruccionMEM[2];
-                    int op3 = instruccionMEM[3];
-                    valMemoriaLW = resultadoEM;
-
-                    System.out.println("Instruccion en MEM:\t");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionMEM[i] + "\t");
-                    }
-                    System.out.println("");
-
-                    if (opCode == 63) {
-                        banderaFin[3] = 1;
-                    }
-
-                    if (opCode == 35 || opCode == 43) {		//Si la instrucción es LW o SW
-                        resultadoMem = resultadoEM;
-                        if (opCode == 43) {	// este puede escribir
-                            datos[resultadoMem] = registros[op2]; //se le guarda el valor del registros
-                        } else { 							//saca el valor de memoria y lo guarda en esta variable
-                            valMemoriaLW = datos[resultadoMem];
-                        }
-                    }
-                    
-                    try {
-                        sem[3].acquire();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                    cambioEtapa(3);
-                    resultadoMW = valMemoriaLW;
-
-                    sem[3].release();
-                    sem[2].release();
-                    try {
-                        barrier.await();
-                        barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
+                System.out.println("Instruccion en MEM:\t");
+                for (int i = 0; i < 4; i++) {
+                    System.out.println(instruccionMEM[i] + "\t");
                 }
 
-                while (banderaFin[4] == 0) {
-                    try {
-                     //   barrier.await();
-                        barrier.await();
-                        barrier.await();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                if (opCode == 63) {
+                    banderaFin[0] = 1;
+                }
+
+                if (opCode == 35 || opCode == 43) {		//Si la instrucción es LW o SW
+                    resultadoMem = resultadoEM;
+                    if (opCode == 43) {	// este puede escribir
+                        datos[resultadoMem * 4] = op2; //se le guarda el valor del registros
+                    } else { 							//saca el valor de memoria y lo guarda en esta variable
+                        valMemoriaLW = datos[resultadoMem * 4];
                     }
                 }
+
+                System.out.println("llegué a ID");
+                try {
+                    sem[3].acquire();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                cambioEtapa(3);
+                resultadoMW = valMemoriaLW;
+
+                sem[3].release();
+                sem[2].release();
+                try {
+                    barrier.await();
+                    barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (BrokenBarrierException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
             }
-        };
+        }
+    };
 
-        final Runnable writeBack = new Runnable() {
-            public void run() {                
-                while (banderaFin[4] == 0) {
-                    
-                    /*try {
-                        barrier.await();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }*/
+    final Runnable writeBack = new Runnable() {
+        public void run() {
 
-                    int opCode = instruccionWB[0];
-                    int op1 = instruccionWB[1];
-                    int op2 = instruccionWB[2];
-                    int op3 = instruccionWB[3];
+            int opCode;
+            while (banderaFin[4] == 0) {
 
-                    System.out.println("Instruccion en WB:\t");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionWB[i] + " ");
-                    }
+                opCode = instruccionWB[0];
+                int op1 = instruccionWB[1];
+                int op2 = instruccionWB[2];
+                int op3 = instruccionWB[3];
 
-                    if (opCode == 63) {
-                        banderaFin[4] = 1;
-                    }
+                System.out.println("Valor op1:" + op1 + "\t");
+                System.out.println("Valor op2:" + op2 + "\t");
+                System.out.println("Valor op3:" + op3 + "\t");
 
-                    if (opCode == 8) {
-                        registros[op2] = resultadoMW;
-                    }
-                    if (opCode == 35) {
-                        registros[op2] = resultadoMW;
-                    }
-                    if (opCode == 32) {
-                        registros[op3] = resultadoMW;
-                    }
-                    if (opCode == 12) {
-                        registros[op3] = resultadoMW;
-                    }
-                    if (opCode == 14) {
-                        registros[op3] = resultadoMW;
-                    }
-                    if (opCode == 34) {
-                        registros[op3] = resultadoMW;
-                    }
-                    if (opCode == 43) {
-                    }
-
-                    //Liberacion de los registros
-                    if (opCode == 8) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
-                    }
-                    if (opCode == 35) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
-                    }
-                    if (opCode == 32) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
-                        tablaReg[op3] = 0;
-                    }
-                    if (opCode == 12) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
-                        tablaReg[op3] = 0;
-                    }
-                    if (opCode == 14) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
-                        tablaReg[op3] = 0;
-                    }
-                    if (opCode == 34) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
-                        tablaReg[op3] = 0;
-                    }
-                    if (opCode == 43) {
-                    }
-
-                    sem[3].release(1);
-                    semReg.release();
-
-                    //System.out.println("llegué a WB");
-
-                    try {
-                        barrier.await();
-                        barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
+                System.out.println("Instruccion en WB:\t");
+                for (int i = 0; i < 4; i++) {
+                    System.out.print(instruccionWB[i] + " ");
                 }
-                
-                /*try {
-                      //  barrier.await();
-                        barrier.await();
-                        barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }*/
-                
+
+                if (opCode == 63) {
+                    banderaFin[0] = 1;
+                }
+
+                System.out.println("Valor opCode:" + opCode + "\t");
+                if (opCode == 8) {
+                    registros[op2] = resultadoMW;
+                }
+                if (opCode == 35) {
+                    registros[op2] = resultadoMW;
+                }
+                if (opCode == 32) {
+                    registros[op3] = resultadoMW;
+                }
+                if (opCode == 12) {
+                    registros[op3] = resultadoMW;
+                }
+                if (opCode == 14) {
+                    registros[op3] = resultadoMW;
+                }
+                if (opCode == 34) {
+                    registros[op3] = resultadoMW;
+                }
+                if (opCode == 43) {
+                }
+
+                //Liberacion de los registros
+                if (opCode == 8) {
+                    tablaReg[op1] = 0;
+                    tablaReg[op2] = 0;
+                }
+                if (opCode == 35) {
+                    tablaReg[op1] = 0;
+                    tablaReg[op2] = 0;
+                }
+                if (opCode == 32) {
+                    tablaReg[op1] = 0;
+                    tablaReg[op2] = 0;
+                    tablaReg[op3] = 0;
+                }
+                if (opCode == 12) {
+                    tablaReg[op1] = 0;
+                    tablaReg[op2] = 0;
+                    tablaReg[op3] = 0;
+                }
+                if (opCode == 14) {
+                    tablaReg[op1] = 0;
+                    tablaReg[op2] = 0;
+                    tablaReg[op3] = 0;
+                }
+                if (opCode == 34) {
+                    tablaReg[op1] = 0;
+                    tablaReg[op2] = 0;
+                    tablaReg[op3] = 0;
+                }
+                if (opCode == 43) {
+                }
+
+                sem[3].release(1);
+                semReg.release();
+
+                System.out.println("llegué a WB");
+
+                try {
+                    barrier.await();
+                    barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (BrokenBarrierException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
             }
-        };
+        }
+    };
 
-        Runnable mainThread;
-        mainThread = new Runnable() {
-            public void run() {
+    Runnable mainThread;
+    mainThread  = new Runnable() {
+        public void run() {
 
-                cargarInstrucciones();
+            cargarInstrucciones();
 
                 //imprimirVecInstrucciones();
-                //System.out.print("\n\n");
-                sem[0].drainPermits();
-                sem[1].drainPermits();
-                sem[2].drainPermits();
-                sem[3].drainPermits();
+            //System.out.print("\n\n");
+            sem[0].drainPermits();
+            sem[1].drainPermits();
+            sem[2].drainPermits();
+            sem[3].drainPermits();
 
-                // inicia los hilos
-                new Thread(instructionFetch).start();
-                new Thread(instructionDecode).start();
-                new Thread(execute).start();
-                new Thread(memory).start();
-                new Thread(writeBack).start();
+            // inicia los hilos
+            new Thread(instructionFetch).start();
+            new Thread(instructionDecode).start();
+            new Thread(execute).start();
+            new Thread(memory).start();
+            new Thread(writeBack).start();
 
-                while (banderaFin[0] == 0 || banderaFin[1] == 0 || banderaFin[2] == 0 || banderaFin[3] == 0 || banderaFin[4] == 0) {
+            while (banderaFin[0] == 0 && banderaFin[1] == 0 && banderaFin[2] == 0 && banderaFin[3] == 0 && banderaFin[4] == 0) {
+                try {
+                    barrier.await();
+
                     try {
-                        //barrier.await();
-                        
-                        barrier.await();
-
-                        try {
-                            if(sem[0].availablePermits() == 1)
-                            {sem[0].acquire();}
-                            if(sem[1].availablePermits() == 1)
-                            {sem[1].acquire();}
-                            if(sem[2].availablePermits() == 1)
-                            {sem[2].acquire();}
-                            if(sem[3].availablePermits() == 1)
-                            {sem[3].acquire();}
-                            semReg.acquire();
-
-                            for (int i = 0; i < 4; i++) {
-                                System.out.print("Semaforo " + i + ":" + sem[1].availablePermits() + " ");
-                            }
-                            System.out.println("");
-
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-
-                        clock++;
-                        barrier.await();
+                        sem[0].acquire();
+                        sem[1].acquire();
+                        sem[2].acquire();
+                        sem[3].acquire();
+                        semReg.acquire();
                     } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
+                    clock++;
+                    barrier.await();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (BrokenBarrierException ex) {
+                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
-                imprimirVecDatos();
-                imprimirRegistros();
-                System.exit(clock);
             }
-        };
 
-        new Thread(mainThread).start();
+            imprimirVecDatos();
+            System.exit(clock);
+        }
+    };
+
+    new Thread(mainThread).start();
     }
 
     //Operaciones 
@@ -658,12 +563,14 @@ public class MIPS {
                 for (String part : parts) {
                     instrucciones[i] = Integer.valueOf(part);
                     i++;
+                
 
-                }
+}
             }
         } catch (IOException ex) {
-            Logger.getLogger(MIPS.class
-                    .getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MIPS.class  
+
+.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -675,12 +582,6 @@ public class MIPS {
             }
             System.out.print(Integer.toString(instrucciones[i]) + "\t");
 
-        }
-    }
-
-    static void imprimirRegistros() {
-        for (int i = 0; i < registros.length; i++) {
-            System.out.println("R" + i + ": " + registros[i] + " ");
         }
     }
 
@@ -696,26 +597,33 @@ public class MIPS {
     }
 
     static void cambioEtapa(int x) {
-        if (x == 0) {
-            for (int i = 0; i < 4; i++) {
-                instruccionID[i] = instruccionIF[i];
-            }
+        switch (x) {
+
+            //IF a ID
+            case 0:
+                for (int i = 0; i < 4; i++) {
+                    instruccionID[i] = instruccionIF[i];
+                }
+
+            // ID a EX
+            case 1:
+                for (int i = 0; i < 4; i++) {
+                    instruccionEX[i] = instruccionID[i];
+                }
+
+            // EX a MEM
+            case 2:
+                for (int i = 0; i < 4; i++) {
+                    instruccionMEM[i] = instruccionEX[i];
+                }
+
+            // MEM a WB
+            case 3:
+                for (int i = 0; i < 4; i++) {
+                    instruccionWB[i] = instruccionMEM[i];
+                }
         }
-        else if (x == 1) {
-            for (int i = 0; i < 4; i++) {
-                instruccionEX[i] = instruccionID[i];
-            }
-        }
-        else if (x == 2) {
-            for (int i = 0; i < 4; i++) {
-                instruccionMEM[i] = instruccionEX[i];
-            }
-        }
-        else if (x == 3) {
-            for (int i = 0; i < 4; i++) {
-                instruccionWB[i] = instruccionMEM[i];
-            }
-        }
+
     }
 
 }
