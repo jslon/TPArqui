@@ -35,6 +35,11 @@ public class MIPS {
     private static Semaphore semReg = new Semaphore(1);
     static CyclicBarrier barrier = new CyclicBarrier(6);
 
+    static CyclicBarrier IFaID = new CyclicBarrier(2);
+    static CyclicBarrier IDaEX = new CyclicBarrier(2);
+    static CyclicBarrier EXaMEM = new CyclicBarrier(2);
+    static CyclicBarrier MEMaWB = new CyclicBarrier(2);
+
     public static void main(String[] args) {
 
         for (int i = 0; i < 200; i++) {             //Inicializa el vector de datos
@@ -77,18 +82,24 @@ public class MIPS {
                         banderaFin[0] = 1;
                     }
 
-                    System.out.println("llegue aqui :)");
                     try {
-                        sem[0].acquire();
+                        /* System.out.println("llegue aqui :)");
+                         try {
+                         sem[0].acquire();
+                         } catch (InterruptedException ex) {
+                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                         }*/
+
+                        // Copia la intrucción al vector de instrucción de la siguente etapa
+                        IFaID.await();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
-
-                    // Copia la intrucción al vector de instrucción de la siguente etapa
                     cambioEtapa(0);
 
-                    sem[0].release();
-
+                  //  sem[0].release();
                     try {
                         barrier.await();
                         barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
@@ -120,16 +131,25 @@ public class MIPS {
                         banderaFin[0] = 1;
                     }
 
-                    System.out.println("Semaforo[1]:" + sem[1].availablePermits());
                     try {
-                        sem[1].acquire();
+                        /*
+                         System.out.println("Semaforo[1]:" + sem[1].availablePermits());
+                         try {
+                         sem[1].acquire();
+                         } catch (InterruptedException ex) {
+                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                         }
+                        
+                         try {
+                         semReg.acquire();
+                         } catch (InterruptedException ex) {
+                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                         }*/
+
+                        IDaEX.await();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                    try {
-                        semReg.acquire();
-                    } catch (InterruptedException ex) {
+                    } catch (BrokenBarrierException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
@@ -198,10 +218,18 @@ public class MIPS {
                         }
                     }
 
-                    sem[1].release();
-                    sem[0].release();
-                    semReg.release();
+                    try {
+                        IFaID.await();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }
 
+                    /*
+                     sem[1].release();
+                     sem[0].release();
+                     semReg.release();*/
                     try {
                         barrier.await();
                         barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
@@ -276,17 +304,31 @@ public class MIPS {
                     }
 
                     try {
-                        sem[2].acquire();
+                        EXaMEM.await();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    /* try {
+                     sem[2].acquire();
+                     } catch (InterruptedException ex) {
+                     Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                     }*/
 
                     cambioEtapa(2);
 
                     resultadoEM = resultado;
 
-                    sem[2].release();
-                    sem[1].release();
+                    try {
+                        IDaEX.await();
+                        // sem[2].release();
+                        // sem[1].release();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }
 
                     try {
                         barrier.await();
@@ -329,19 +371,32 @@ public class MIPS {
                         }
                     }
 
-                    System.out.println("llegué a ID");
                     try {
-                        sem[3].acquire();
+                        /*  System.out.println("llegué a ID");
+                         try {
+                         sem[3].acquire();
+                         } catch (InterruptedException ex) {
+                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                         }*/
+
+                        MEMaWB.await();
                     } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    cambioEtapa(3);
+                    resultadoMW = valMemoriaLW;
+                    try {
+                        EXaMEM.await();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                    cambioEtapa(3);
-                    resultadoMW = valMemoriaLW;
-
-                    sem[3].release();
-                    sem[2].release();
-
+                   // sem[3].release();
+                    //  sem[2].release();
                     try {
                         barrier.await();
                         barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
@@ -388,9 +443,16 @@ public class MIPS {
                         tablaReg[op3] = 0;
                     }
 
-                    sem[3].release();
-                    semReg.release();
-
+                    try {
+                        //sem[3].release();
+                        //semReg.release();
+                        MEMaWB.await();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
                     System.out.println("llegué a WB");
 
                     try {
@@ -434,7 +496,7 @@ public class MIPS {
                     try {
                         barrier.await();
 
-                        try {
+                       /* try {
                             sem[0].acquire();
                             sem[1].acquire();
                             sem[2].acquire();
@@ -442,7 +504,7 @@ public class MIPS {
                             semReg.acquire();
                         } catch (InterruptedException ex) {
                             Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        }*/
 
                         clock++;
                         barrier.await();
