@@ -62,7 +62,7 @@ public class MIPS {
         final Runnable instructionFetch = new Runnable() {
             public void run() {
                 while (banderaFin[0] == 0) {
-                    try {
+                    /*try {
                         //mientras no tenga que finalizar
 
                         barrier.await();
@@ -70,7 +70,7 @@ public class MIPS {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (BrokenBarrierException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    }*/
 
                     System.out.println("PC: " + pc);
 
@@ -91,8 +91,7 @@ public class MIPS {
                     {
                         banderaFin[0] = 1;
                     }
-
-                    System.out.println("llegue aqui :)");
+                    
                     try {
                         sem[0].acquire();
                     } catch (InterruptedException ex) {
@@ -114,7 +113,9 @@ public class MIPS {
 
                 while (banderaFin[4] == 0) {
                     try {
+                        //barrier.await();
                         barrier.await();
+                        System.out.println("Espero a WB\t");
                         barrier.await();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
@@ -130,13 +131,13 @@ public class MIPS {
             public void run() {
                 while (banderaFin[1] == 0) {
 
-                    try {
+                    /*try {
                         barrier.await();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (BrokenBarrierException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    }*/
 
                     int opCode = instruccionID[0];
                     int op1 = instruccionID[1];
@@ -150,6 +151,7 @@ public class MIPS {
                     System.out.println("");
 
                     if (opCode == 63) {
+                        cambioEtapa(1);
                         banderaFin[1] = 1;
                     }
 
@@ -201,23 +203,15 @@ public class MIPS {
                             cambioEtapa(1);
                         }
                     }
+                    if (opCode == 4){                           //BEQZ
+                    }
+                    if (opCode == 5){                           //BNEZ
+                    }
+                    if (opCode == 3){                           //JAL
+                    }
+                    if (opCode == 2){                           //JR
+                    }
 
-                    //Falta Agregar IFS para estos casos
-                        /*case 4: {                  		//BEQZ
-
-                     }
-                     case 5: {                  		//BNEZ
-
-                     }
-                     case 3: {                  		//JAL
-
-                     }
-                     case 2: {                  		//JR
-
-                     }
-                     case 63: {                  	//FIN
-                     //Avisa que esta terminando
-                     }*/
                     sem[1].release();
                     sem[0].release();
                     semReg.release();
@@ -232,20 +226,11 @@ public class MIPS {
 
                 }
 
-                while (banderaFin[2] == 0 || banderaFin[3] == 0 || banderaFin[4] == 0) {
-                    try {
-                        barrier.await();
-                        barrier.await();
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (BrokenBarrierException ex) {
-                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-
                 while (banderaFin[4] == 0) {
                     try {
+                        //barrier.await();
                         barrier.await();
+                        System.out.println("Espero a WB\t");
                         barrier.await();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
@@ -262,13 +247,13 @@ public class MIPS {
             public void run() {
                 while (banderaFin[2] == 0) {
 
-                    try {
+                    /*try {
                         barrier.await();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (BrokenBarrierException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    }*/
 
                     int opCode = instruccionEX[0];
                     int op1 = instruccionEX[1];
@@ -347,6 +332,7 @@ public class MIPS {
 
                 while (banderaFin[4] == 0) {
                     try {
+                       // barrier.await();
                         barrier.await();
                         barrier.await();
                     } catch (InterruptedException ex) {
@@ -363,13 +349,13 @@ public class MIPS {
             public void run() {
                 while (banderaFin[3] == 0) {
 
-                    try {
+                    /*try {
                         barrier.await();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (BrokenBarrierException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    }*/
 
                     int opCode = instruccionMEM[0];
                     int op1 = instruccionMEM[1];
@@ -395,8 +381,7 @@ public class MIPS {
                             valMemoriaLW = datos[resultadoMem];
                         }
                     }
-
-                    System.out.println("llegué a ID");
+                    
                     try {
                         sem[3].acquire();
                     } catch (InterruptedException ex) {
@@ -421,6 +406,7 @@ public class MIPS {
 
                 while (banderaFin[4] == 0) {
                     try {
+                     //   barrier.await();
                         barrier.await();
                         barrier.await();
                     } catch (InterruptedException ex) {
@@ -433,20 +419,18 @@ public class MIPS {
         };
 
         final Runnable writeBack = new Runnable() {
-            public void run() {
-
-                try {
-                    barrier.await();
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (BrokenBarrierException ex) {
-                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
-                int opCode;
+            public void run() {                
                 while (banderaFin[4] == 0) {
+                    
+                    /*try {
+                        barrier.await();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }*/
 
-                    opCode = instruccionWB[0];
+                    int opCode = instruccionWB[0];
                     int op1 = instruccionWB[1];
                     int op2 = instruccionWB[2];
                     int op3 = instruccionWB[3];
@@ -516,7 +500,7 @@ public class MIPS {
                     sem[3].release(1);
                     semReg.release();
 
-                    System.out.println("llegué a WB");
+                    //System.out.println("llegué a WB");
 
                     try {
                         barrier.await();
@@ -528,6 +512,17 @@ public class MIPS {
                     }
 
                 }
+                
+                /*try {
+                      //  barrier.await();
+                        barrier.await();
+                        barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (BrokenBarrierException ex) {
+                        Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }*/
+                
             }
         };
 
@@ -553,15 +548,19 @@ public class MIPS {
 
                 while (banderaFin[0] == 0 || banderaFin[1] == 0 || banderaFin[2] == 0 || banderaFin[3] == 0 || banderaFin[4] == 0) {
                     try {
-                        barrier.await();
-
+                        //barrier.await();
+                        
                         barrier.await();
 
                         try {
-                            sem[0].drainPermits();
-                            sem[1].drainPermits();
-                            sem[2].drainPermits();
-                            sem[3].drainPermits();
+                            if(sem[0].availablePermits() == 1)
+                            {sem[0].acquire();}
+                            if(sem[1].availablePermits() == 1)
+                            {sem[1].acquire();}
+                            if(sem[2].availablePermits() == 1)
+                            {sem[2].acquire();}
+                            if(sem[3].availablePermits() == 1)
+                            {sem[3].acquire();}
                             semReg.acquire();
 
                             for (int i = 0; i < 4; i++) {
@@ -702,17 +701,17 @@ public class MIPS {
                 instruccionID[i] = instruccionIF[i];
             }
         }
-        if (x == 1) {
+        else if (x == 1) {
             for (int i = 0; i < 4; i++) {
                 instruccionEX[i] = instruccionID[i];
             }
         }
-        if (x == 2) {
+        else if (x == 2) {
             for (int i = 0; i < 4; i++) {
                 instruccionMEM[i] = instruccionEX[i];
             }
         }
-        if (x == 3) {
+        else if (x == 3) {
             for (int i = 0; i < 4; i++) {
                 instruccionWB[i] = instruccionMEM[i];
             }
