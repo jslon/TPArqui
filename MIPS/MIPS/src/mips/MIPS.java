@@ -85,7 +85,7 @@ public class MIPS {
                     for (int i = 0; i < 4; i++) {
                         System.out.print(instruccionIF[i] + "\t");
                     }
-                    System.out.println("");
+                    
 
                     if (instruccionIF[0] == 63) //Si la instrucción es FIN
                     {
@@ -275,11 +275,6 @@ public class MIPS {
                     for (int i = 0; i < 4; i++) {
                         System.out.print(instruccionEX[i] + "\t");
                     }
-                    System.out.println("");
-
-                    if (opCode == 63) {
-                        banderaFin[2] = 1;
-                    }
 
                     if (opCode == 8) {    //DADDI
                         resultado = daddi(op1, op2, op3);
@@ -315,6 +310,7 @@ public class MIPS {
                         resultado = jr(op1);
                     }
                     if (opCode == 63) {                  //FIN
+                        banderaFin[2] = 1;
                     }
 
                     try {
@@ -391,17 +387,9 @@ public class MIPS {
                         } else { 							//saca el valor de memoria y lo guarda en esta variable
                             valMemoriaLW = datos[resultadoMem];
                         }
-                        
-                        
-                        /*
-                        
-                        AQUI VAN LAS OPERACIONES ARITMÉTICAS
-                        
-                        */
-                        
-                        
-                        
-                        
+                    }
+                    else {                      //Si es cualquier otra intruccion
+                    
                     }
                     
                     try {
