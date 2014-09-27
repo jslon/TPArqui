@@ -389,7 +389,10 @@ public class MIPS {
                         }
                     }
                     else {                      //Si es cualquier otra intruccion
-                    
+                        if(opCode == 8 || opCode == 32 || opCode == 34 || opCode == 12 || opCode == 14) {
+                            resultadoMem = resultadoEM;
+                        }
+                        
                     }
                     
                     try {
@@ -399,7 +402,13 @@ public class MIPS {
                     }
 
                     cambioEtapa(3);
-                    resultadoMW = valMemoriaLW;
+                    
+                    if (opCode == 43) {
+                        resultadoMW = valMemoriaLW;
+                    }
+                    
+                    resultadoMW = resultadoMem;
+                    
 
                     sem[3].release();
                     sem[2].release();
