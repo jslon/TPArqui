@@ -140,8 +140,8 @@ public class MIPS {
                     }*/
 
                     int opCode = instruccionID[0];
-                    int op1 = registros[instruccionID[1]];
-                    int op2 = registros[instruccionID[2]];
+                    int op1 = instruccionID[1];
+                    int op2 = instruccionID[2];
                     int op3 = instruccionID[3];
                     
                     
@@ -383,9 +383,10 @@ public class MIPS {
                     if (opCode == 35 || opCode == 43) {		//Si la instrucción es LW o SW
                         resultadoMem = resultadoEM;
                         if (opCode == 43) {	// este puede escribir
-                            datos[resultadoMem] = op2;/*registros[op2];*/ //se le guarda el valor del registros
+                            datos[resultadoMem] = regDestino;/*registros[op2];*/ //se le guarda el valor del registros
                         } else { 							//saca el valor de memoria y lo guarda en esta variable
-                            valMemoriaLW = datos[resultadoMem];
+                            //valMemoriaLW = datos[resultadoMem];
+                            resultadoMem = datos[resultadoMem];
                         }
                     }
                     else {                      //Si es cualquier otra intruccion
@@ -403,9 +404,11 @@ public class MIPS {
 
                     cambioEtapa(3);
                     
+                    /*
                     if (opCode == 43) {
                         resultadoMW = valMemoriaLW;
                     }
+                    */
                     
                     resultadoMW = resultadoMem;
                     
@@ -557,7 +560,11 @@ public class MIPS {
                 //imprimirVecInstrucciones();
                 //System.out.print("\n\n");
                 
-
+                sem[0].drainPermits();
+                sem[1].drainPermits();
+                sem[2].drainPermits();
+                sem[3].drainPermits();
+                
                 // inicia los hilos
                 new Thread(instructionFetch).start();
                 new Thread(instructionDecode).start();
@@ -567,7 +574,6 @@ public class MIPS {
 
                 while (banderaFin[0] == 0 || banderaFin[1] == 0 || banderaFin[2] == 0 || banderaFin[3] == 0 || banderaFin[4] == 0) {
                     try {
-                        //barrier.await();
                         barrier.await();
                         
                         sem[0].drainPermits();
@@ -620,37 +626,37 @@ public class MIPS {
 
     //Operaciones 
     static int daddi(int ry, int rx, int n) {
-        int resultado = ry + n;
+        int resultado = registros[ry] + n;
         return resultado;
     }
 
     static int dadd(int ry, int rz, int rx) {
-        int resultado = ry + rz;
+        int resultado = registros[ry] + registros[rz];
         return resultado;
     }
 
     static int dsub(int ry, int rz, int rx) {
-        int resultado = ry - rz;
+        int resultado = registros[ry] - registros[rz];
         return resultado;
     }
 
     static int dmul(int ry, int rz, int rx) {
-        int resultado = ry * rz;;
+        int resultado = registros[ry] * registros[rz];
         return resultado;
     }
 
     static int ddiv(int ry, int rz, int rx) {
-        int resultado = ry / rz;;
+        int resultado = registros[ry] / registros[rz];
         return resultado;
     }
 
     static int lw(int ry, int rx, int n) {
-        int resultado = n + ry;
+        int resultado = n + registros[ry];
         return resultado;
     }
 
     static int sw(int ry, int rx, int n) {
-        int resultado = n + ry;
+        int resultado = n + registros[ry];
         return resultado;
     }
 
