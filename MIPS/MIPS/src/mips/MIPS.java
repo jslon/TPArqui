@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 public class MIPS {
 
-    static int clock = 0;
+    static int clock = 1;
     static int[] datos = new int[200];
     static int[] instrucciones = new int[400];
     static int[] registros = new int[32];
@@ -85,7 +85,7 @@ public class MIPS {
                     for (int i = 0; i < 4; i++) {
                         System.out.print(instruccionIF[i] + "\t");
                     }
-                    
+                    System.out.println("");
 
                     if (instruccionIF[0] == 63) //Si la instrucción es FIN
                     {
@@ -115,7 +115,7 @@ public class MIPS {
                     try {
                         //barrier.await();
                         barrier.await();
-                        System.out.println("Espero a WB\t");
+                        //System.out.println("Espero a WB\t");
                         barrier.await();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
@@ -239,7 +239,7 @@ public class MIPS {
                     try {
                         //barrier.await();
                         barrier.await();
-                        System.out.println("Espero a WB\t");
+                        //System.out.println("Espero a WB\t");
                         barrier.await();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
@@ -275,6 +275,7 @@ public class MIPS {
                     for (int i = 0; i < 4; i++) {
                         System.out.print(instruccionEX[i] + "\t");
                     }
+                    System.out.println("");
 
                     if (opCode == 8) {    //DADDI
                         resultado = daddi(op1, op2, op3);
@@ -458,10 +459,11 @@ public class MIPS {
                     int op3 = instruccionWB[3];
                     int regDestino = instruccionWB[4];
 
-                    System.out.println("Instruccion en WB:\t");
+                    System.out.println("Instruccion en WB:");
                     for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionWB[i] + " ");
+                        System.out.print(instruccionWB[i] + "\t");
                     }
+                    System.out.println("");
 
                     if (opCode == 63) {
                         banderaFin[4] = 1;
@@ -488,7 +490,7 @@ public class MIPS {
                     if (opCode == 43) {
                         
                     }
-                    System.out.print("destino: "+instruccionWB[4]+"resultadoMW: "+resultadoMW);
+                    //System.out.println("destino: "+instruccionWB[4]+"resultadoMW: "+resultadoMW+"\n");
 
                     //Liberacion de los registros
                     if (opCode == 8) {
@@ -596,7 +598,7 @@ public class MIPS {
                             semReg.acquire();
 
                             for (int i = 0; i < 4; i++) {
-                                System.out.print("Semaforo " + i + ":" + sem[1].availablePermits() + " ");
+                                System.out.println("Semaforo " + i + ":" + sem[1].availablePermits() + " ");
                             }
                             System.out.println("");
 
@@ -617,6 +619,8 @@ public class MIPS {
 
                 imprimirVecDatos();
                 imprimirRegistros();
+                
+                System.out.println("El valor del reloj es: "+clock);
                 System.exit(clock);
             }
         };
@@ -704,28 +708,29 @@ public class MIPS {
         for (int i = 0; i < instrucciones.length; i++) {
             if (i % 4 == 0) //Si es múltiplo de 4       
             {
-                System.out.print("\n");   //cambio de linea
+                System.out.println("");   //cambio de linea
             }
             System.out.print(Integer.toString(instrucciones[i]) + "\t");
-
         }
+        System.out.println("");
     }
 
     static void imprimirRegistros() {
         for (int i = 0; i < registros.length; i++) {
             System.out.println("R" + i + ": " + registros[i] + " ");
         }
+        System.out.println("");
     }
 
     static void imprimirVecDatos() {
         for (int i = 0; i < datos.length; i++) {
             if (i % 4 == 0) //Si es múltiplo de 4       
             {
-                System.out.print("\n");   //cambio de linea
+                System.out.println("");   //cambio de linea
             }
             System.out.print(datos[i] + "\t");
-
         }
+        System.out.println("");
     }
 
     static void cambioEtapa(int x) {
