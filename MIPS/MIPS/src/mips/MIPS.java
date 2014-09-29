@@ -153,10 +153,7 @@ public class MIPS {
                     }
                     System.out.println("");
 
-                    if (opCode == 63) {
-                        cambioEtapa(1);
-                        banderaFin[1] = 1;
-                    }
+                    
 
                     try {
                         sem[1].acquire();
@@ -168,6 +165,12 @@ public class MIPS {
                         semReg.acquire();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    
+                    
+                    if (opCode == 63) {
+                        cambioEtapa(1);
+                        banderaFin[1] = 1;
                     }
 
                     //switch que identifique el OP
@@ -209,6 +212,7 @@ public class MIPS {
                     }
                     if (opCode == 43) {
                         if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0) {  //Si los registros op1 y op2 están libres
+                            instruccionID[4] = op2;
                             cambioEtapa(1);
                         }
                     }
@@ -381,11 +385,12 @@ public class MIPS {
                         banderaFin[3] = 1;
                     }
 
-                    if (opCode == 35 || opCode == 43) {		//Si la instrucción es LW o SW
+                    /*if (opCode == 35 || opCode == 43) {		//Si la instrucción es LW o SW
                         resultadoMem = resultadoEM;
                         if (opCode == 43) {	// este puede escribir
-                            datos[resultadoMem] = regDestino;/*registros[op2];*/ //se le guarda el valor del registros
-                        } else { 							//saca el valor de memoria y lo guarda en esta variable
+                            datos[resultadoMem] = registros[resultadoMem]; //se le guarda el valor del registros
+                        } 
+                        else { 							//saca el valor de memoria y lo guarda en esta variable
                             //valMemoriaLW = datos[resultadoMem];
                             resultadoMem = datos[resultadoMem];
                         }
@@ -394,8 +399,18 @@ public class MIPS {
                         if(opCode == 8 || opCode == 32 || opCode == 34 || opCode == 12 || opCode == 14) {
                             resultadoMem = resultadoEM;
                         }
-                        
+                    
                     }
+                        */
+                    
+                    resultadoMem = resultadoEM;
+                    if(opCode == 35)
+                    {resultadoMem = datos[resultadoMem];}
+                    if(opCode == 43) {
+                        datos[resultadoMem] = registros[regDestino];
+                    }
+                        
+                    
                     
                     try {
                         sem[3].acquire();
@@ -687,7 +702,7 @@ public class MIPS {
     static void cargarInstrucciones() {
         try {
 
-            BufferedReader bf = new BufferedReader(new FileReader("HILO-B-v2.txt"));
+            BufferedReader bf = new BufferedReader(new FileReader("HILO-C.txt"));
             String linea = "";
             int i = 0;
             while ((linea = bf.readLine()) != null) {
@@ -724,7 +739,7 @@ public class MIPS {
 
     static void imprimirVecDatos() {
         for (int i = 0; i < datos.length; i++) {
-            if (i % 4 == 0) //Si es múltiplo de 4       
+            if (i % 10 == 0) //Si es múltiplo de 4       
             {
                 System.out.println("");   //cambio de linea
             }
