@@ -24,7 +24,7 @@ public class MIPS {
     static int[] instruccionEX = new int[5];
     static int[] instruccionMEM = new int[5];
     static int[] instruccionWB = new int[5];
-    static int pc = 0;
+    static int   pc = 0;
     static int[] tablaReg = new int[32];
     static int[] banderaFin = new int[5];                     // indica la finalización del programa para cada etapa. 1 = FIN
     static int resultadoEM = 0;                              // EX le pasa el resultado a Mem
@@ -618,7 +618,7 @@ public class MIPS {
     static void cargarInstrucciones() {
         try {
 
-            BufferedReader bf = new BufferedReader(new FileReader("HILO-C.txt"));
+            BufferedReader bf = new BufferedReader(new FileReader("HILO-A.txt"));
             String linea = "";
             int i = 0;
             while ((linea = bf.readLine()) != null) {
