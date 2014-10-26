@@ -7,11 +7,13 @@ package mips;
 
 import java.lang.Thread;
 import java.io.*;
+import java.io.File;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 
 public class MIPS {
 
@@ -63,8 +65,7 @@ public class MIPS {
             public void run() {
                 while (banderaFin[0] == 0) {
 
-                   // System.out.println("PC: " + pc);
-
+                    // System.out.println("PC: " + pc);
                     // Copia la instrucción de la "memoria" al vector de instrucción de IF
                     for (int i = 0; i < 4; i++) {
                         instruccionIF[i] = instrucciones[(pc) + i];
@@ -73,13 +74,12 @@ public class MIPS {
                     pc += 4;
 
                     /*
-                    System.out.println("Instruccion en IF:\t");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionIF[i] + "\t");
-                    }
-                    System.out.println("");
-                    */
-                  
+                     System.out.println("Instruccion en IF:\t");
+                     for (int i = 0; i < 4; i++) {
+                     System.out.print(instruccionIF[i] + "\t");
+                     }
+                     System.out.println("");
+                     */
                     if (instruccionIF[0] == 63) //Si la instrucción es FIN
                     {
                         banderaFin[0] = 1;
@@ -127,13 +127,12 @@ public class MIPS {
                     int op3 = instruccionID[3];
 
                     /*
-                    System.out.println("Instruccion en ID:\t");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionID[i] + "\t");
-                    }
-                    System.out.println("");
-                    */
-                    
+                     System.out.println("Instruccion en ID:\t");
+                     for (int i = 0; i < 4; i++) {
+                     System.out.print(instruccionID[i] + "\t");
+                     }
+                     System.out.println("");
+                     */
                     try {
                         sem[1].acquire();
                     } catch (InterruptedException ex) {
@@ -151,7 +150,6 @@ public class MIPS {
                         banderaFin[1] = 1;
                     }
 
-                    
                     if (opCode == 8) {
                         if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0) {  //Si los registros op1 y op2 están libres
                             instruccionID[4] = op2;
@@ -241,15 +239,14 @@ public class MIPS {
                     int op3 = instruccionEX[3];
                     int regDestino = instruccionEX[4];
                     int resultado = 0;
-                    
+
                     /*
-                    System.out.println("Instruccion en EX:\t");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionEX[i] + "\t");
-                    }
-                    System.out.println("");
-                    */
-                    
+                     System.out.println("Instruccion en EX:\t");
+                     for (int i = 0; i < 4; i++) {
+                     System.out.print(instruccionEX[i] + "\t");
+                     }
+                     System.out.println("");
+                     */
                     if (opCode == 8) {    //DADDI
                         resultado = daddi(op1, op2, op3);
                     }
@@ -334,15 +331,14 @@ public class MIPS {
                     int op3 = instruccionMEM[3];
                     int regDestino = instruccionMEM[4];
                     valMemoriaLW = resultadoEM;
-                    
+
                     /*
-                    System.out.println("Instruccion en MEM:\t");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionMEM[i] + "\t");
-                    }
-                    System.out.println("");
-                    */
-                    
+                     System.out.println("Instruccion en MEM:\t");
+                     for (int i = 0; i < 4; i++) {
+                     System.out.print(instruccionMEM[i] + "\t");
+                     }
+                     System.out.println("");
+                     */
                     if (opCode == 63) {
                         banderaFin[3] = 1;
                     }
@@ -417,13 +413,12 @@ public class MIPS {
                     int regDestino = instruccionWB[4];
 
                     /*
-                    System.out.println("Instruccion en WB:");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionWB[i] + "\t");
-                    }
-                    System.out.println("");
-                    */
-                    
+                     System.out.println("Instruccion en WB:");
+                     for (int i = 0; i < 4; i++) {
+                     System.out.print(instruccionWB[i] + "\t");
+                     }
+                     System.out.println("");
+                     */
                     if (opCode == 63) {
                         banderaFin[4] = 1;
                     }
@@ -502,7 +497,7 @@ public class MIPS {
             public void run() {
 
                 cargarInstrucciones();
-
+/*
                 sem[0].drainPermits();
                 sem[1].drainPermits();
                 sem[2].drainPermits();
@@ -527,11 +522,11 @@ public class MIPS {
                         try {
                             semReg.acquire();
                             /*
-                            for (int i = 0; i < 4; i++) {
-                                System.out.println("Semaforo " + i + ":" + sem[1].availablePermits() + " ");
-                            }
-                            System.out.println("");
-                            */
+                             for (int i = 0; i < 4; i++) {
+                             System.out.println("Semaforo " + i + ":" + sem[1].availablePermits() + " ");
+                             }
+                             System.out.println("");
+                             *//*
 
                         } catch (InterruptedException ex) {
                             Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
@@ -546,10 +541,11 @@ public class MIPS {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
-                }
+                }*/
 
-                imprimirVecDatos();
-                imprimirRegistros();
+                imprimirVecInstrucciones();
+              //  imprimirVecDatos();
+            //    imprimirRegistros();
 
                 System.out.println("El valor del reloj es: " + clock);
                 System.exit(clock);
@@ -617,22 +613,56 @@ public class MIPS {
 
     static void cargarInstrucciones() {
         try {
-
-            BufferedReader bf = new BufferedReader(new FileReader("HILO-C.txt"));
-            String linea = "";
+            JFileChooser loadEmp = new JFileChooser();//new dialog
+            File[] seleccionados;//needed*
+            BufferedReader bf;//needed*
             int i = 0;
-            while ((linea = bf.readLine()) != null) {
-                String[] parts = linea.split("\\s");
-                for (String part : parts) {
-                    instrucciones[i] = Integer.valueOf(part);
-                    i++;
+            String linea = "";
+           // File f = new File("Desktop");
+            
+            loadEmp.setCurrentDirectory(null);
+            loadEmp.setMultiSelectionEnabled(true);
+            loadEmp.showOpenDialog(null);
+            seleccionados = loadEmp.getSelectedFiles();
 
+            for (File seleccionado : seleccionados) {
+                bf = new BufferedReader(new FileReader(seleccionado));
+                System.out.println(seleccionado.toString());
+                
+                while ((linea = bf.readLine()) != null) {
+                    String[] parts = linea.split("\\s");
+                    for (String part : parts) {
+                        instrucciones[i] = Integer.valueOf(part);
+                        i++;
+                    }
+                    System.out.println(linea);
+                    //close stream, files stops loading
                 }
+                
+                    bf.close();
             }
         } catch (IOException ex) {
-            Logger.getLogger(MIPS.class
-                    .getName()).log(Level.SEVERE, null, ex);
+        } //catches nullpointer exception, file not found
+        catch (NullPointerException ex) {
         }
+
+        /*try {
+
+         BufferedReader bf = new BufferedReader(new FileReader("HILO-C.txt"));
+         String linea = "";
+         int i = 0;
+         while ((linea = bf.readLine()) != null) {
+         String[] parts = linea.split("\\s");
+         for (String part : parts) {
+         instrucciones[i] = Integer.valueOf(part);
+         i++;
+
+         }
+         }
+         } catch (IOException ex) {
+         Logger.getLogger(MIPS.class
+         .getName()).log(Level.SEVERE, null, ex);
+         }*/
     }
 
     static void imprimirVecInstrucciones() {
