@@ -7,24 +7,32 @@ package mips;
 
 import java.lang.Thread;
 import java.io.*;
+import java.io.File;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFileChooser;
 
 public class MIPS {
 
+    /* Estados: 1  = modificado
+    *           2  = compartido
+    *           -1 = invalido
+    */
+    
     static int clock = 1;
-    static int[] datos = new int[200];
-    static int[] instrucciones = new int[400];
+    static int[] datos = new int[832];
+    static int[] instrucciones = new int[768];
     static int[] registros = new int[32];
+    static int[][] cache   = new int [6][8];
     static int[] instruccionIF = new int[4];
     static int[] instruccionID = new int[5];
     static int[] instruccionEX = new int[5];
     static int[] instruccionMEM = new int[5];
     static int[] instruccionWB = new int[5];
-    static int   pc = 0;
+    static int pc = 0;
     static int[] tablaReg = new int[32];
     static int[] banderaFin = new int[5];                     // indica la finalización del programa para cada etapa. 1 = FIN
     static int resultadoEM = 0;                              // EX le pasa el resultado a Mem
@@ -41,12 +49,20 @@ public class MIPS {
     static CyclicBarrier MEMaWB = new CyclicBarrier(2);
 
     public static void main(String[] args) {
+        
 
-        for (int i = 0; i < 200; i++) {             //Inicializa el vector de datos
-            datos[i] = 0;
+        for(int i = 0 ; i < 6;  i++) {
+            for (int j = 0; j < 8; j++){
+                cache[i][j] = -2;
+            }
         }
 
-        for (int i = 0; i < 400; i++) {             //Inicializa el vector de instrucciones
+        for (int i = 0; i < datos.length; i++) {             //Inicializa el vector de datos
+            datos[i] = 1;
+        }
+
+        
+        for (int i = 0; i < instrucciones.length; i++) {             //Inicializa el vector de instrucciones
             instrucciones[i] = 0;
         }
 
@@ -63,8 +79,7 @@ public class MIPS {
             public void run() {
                 while (banderaFin[0] == 0) {
 
-                   // System.out.println("PC: " + pc);
-
+                    // System.out.println("PC: " + pc);
                     // Copia la instrucción de la "memoria" al vector de instrucción de IF
                     for (int i = 0; i < 4; i++) {
                         instruccionIF[i] = instrucciones[(pc) + i];
@@ -73,13 +88,12 @@ public class MIPS {
                     pc += 4;
 
                     /*
-                    System.out.println("Instruccion en IF:\t");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionIF[i] + "\t");
-                    }
-                    System.out.println("");
-                    */
-                  
+                     System.out.println("Instruccion en IF:\t");
+                     for (int i = 0; i < 4; i++) {
+                     System.out.print(instruccionIF[i] + "\t");
+                     }
+                     System.out.println("");
+                     */
                     if (instruccionIF[0] == 63) //Si la instrucción es FIN
                     {
                         banderaFin[0] = 1;
@@ -127,13 +141,12 @@ public class MIPS {
                     int op3 = instruccionID[3];
 
                     /*
-                    System.out.println("Instruccion en ID:\t");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionID[i] + "\t");
-                    }
-                    System.out.println("");
-                    */
-                    
+                     System.out.println("Instruccion en ID:\t");
+                     for (int i = 0; i < 4; i++) {
+                     System.out.print(instruccionID[i] + "\t");
+                     }
+                     System.out.println("");
+                     */
                     try {
                         sem[1].acquire();
                     } catch (InterruptedException ex) {
@@ -151,7 +164,6 @@ public class MIPS {
                         banderaFin[1] = 1;
                     }
 
-                    
                     if (opCode == 8) {
                         if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0) {  //Si los registros op1 y op2 están libres
                             instruccionID[4] = op2;
@@ -241,15 +253,14 @@ public class MIPS {
                     int op3 = instruccionEX[3];
                     int regDestino = instruccionEX[4];
                     int resultado = 0;
-                    
+
                     /*
-                    System.out.println("Instruccion en EX:\t");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionEX[i] + "\t");
-                    }
-                    System.out.println("");
-                    */
-                    
+                     System.out.println("Instruccion en EX:\t");
+                     for (int i = 0; i < 4; i++) {
+                     System.out.print(instruccionEX[i] + "\t");
+                     }
+                     System.out.println("");
+                     */
                     if (opCode == 8) {    //DADDI
                         resultado = daddi(op1, op2, op3);
                     }
@@ -334,15 +345,15 @@ public class MIPS {
                     int op3 = instruccionMEM[3];
                     int regDestino = instruccionMEM[4];
                     valMemoriaLW = resultadoEM;
-                    
+
+                    int bloque = (resultadoEM/4)%8;
                     /*
-                    System.out.println("Instruccion en MEM:\t");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionMEM[i] + "\t");
-                    }
-                    System.out.println("");
-                    */
-                    
+                     System.out.println("Instruccion en MEM:\t");
+                     for (int i = 0; i < 4; i++) {
+                     System.out.print(instruccionMEM[i] + "\t");
+                     }
+                     System.out.println("");
+                     */
                     if (opCode == 63) {
                         banderaFin[3] = 1;
                     }
@@ -365,11 +376,42 @@ public class MIPS {
                      }
                      */
                     resultadoMem = resultadoEM;
-                    if (opCode == 35) {
-                        resultadoMem = datos[resultadoMem];
+                    if (opCode == 35) {         //load
+                        if(hitDeEscritura(resultadoMem)){
+                            resultadoMem = cache[resultadoMem%(((resultadoMem/4))*4)][(resultadoMem/4)%8];
+                        }
+                        else{
+                            resolverFalloDeCache(resultadoMem);
+                            resultadoMem = cache[resultadoMem%(((resultadoMem/4))*4)][(resultadoMem/4)%8];
+                        }
                     }
-                    if (opCode == 43) {
-                        datos[resultadoMem] = registros[regDestino];
+                    
+                    
+                    
+                    if (opCode == 43) {         //store
+                        try{
+                            if(hitDeEscritura(resultadoMem)){
+                            cache[resultadoMem%(((resultadoMem/4))*4)][(resultadoMem/4)%8] = registros[regDestino];
+                            cache[5][bloque] = 1;               //pone el estado en modificado
+                        }
+                        else{
+                            resolverFalloDeCache(resultadoMem);
+                            
+                            cache[resultadoMem%(((resultadoMem/4))*4)][(resultadoMem/4)%8] = registros[regDestino];
+                            cache[5][bloque] = 1;               //pone el estado en modificado
+                        }
+                        }
+                        catch(java.lang.ArithmeticException exc){
+                            if(hitDeEscritura(resultadoMem)){
+                                cache[0][0] = registros[regDestino];
+                            }
+                            else{
+                                resolverFalloDeCache(resultadoMem);
+                                cache[0][0] = registros[regDestino];
+                                cache[0][5] = 1;
+                            }
+                        }
+                        
                     }
 
                     try {
@@ -417,13 +459,12 @@ public class MIPS {
                     int regDestino = instruccionWB[4];
 
                     /*
-                    System.out.println("Instruccion en WB:");
-                    for (int i = 0; i < 4; i++) {
-                        System.out.print(instruccionWB[i] + "\t");
-                    }
-                    System.out.println("");
-                    */
-                    
+                     System.out.println("Instruccion en WB:");
+                     for (int i = 0; i < 4; i++) {
+                     System.out.print(instruccionWB[i] + "\t");
+                     }
+                     System.out.println("");
+                     */
                     if (opCode == 63) {
                         banderaFin[4] = 1;
                     }
@@ -526,12 +567,6 @@ public class MIPS {
 
                         try {
                             semReg.acquire();
-                            /*
-                            for (int i = 0; i < 4; i++) {
-                                System.out.println("Semaforo " + i + ":" + sem[1].availablePermits() + " ");
-                            }
-                            System.out.println("");
-                            */
 
                         } catch (InterruptedException ex) {
                             Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
@@ -548,8 +583,13 @@ public class MIPS {
 
                 }
 
-                imprimirVecDatos();
+                //imprimirVecInstrucciones();
+                
                 imprimirRegistros();
+                imprimirCache();
+                cacheAMemoria();
+                imprimirVecDatos();
+                
 
                 System.out.println("El valor del reloj es: " + clock);
                 System.exit(clock);
@@ -617,22 +657,57 @@ public class MIPS {
 
     static void cargarInstrucciones() {
         try {
-
-            BufferedReader bf = new BufferedReader(new FileReader("HILO-A.txt"));
-            String linea = "";
+            JFileChooser loadEmp = new JFileChooser();//new dialog
+            File[] seleccionados;//needed*
+            BufferedReader bf;//needed*
             int i = 0;
-            while ((linea = bf.readLine()) != null) {
-                String[] parts = linea.split("\\s");
-                for (String part : parts) {
-                    instrucciones[i] = Integer.valueOf(part);
-                    i++;
+            String linea = "";
+           // File f = new File("Desktop");
+            
+            File directorio = new File(System.getProperty("user.dir"));
+            loadEmp.setCurrentDirectory(directorio);
+            loadEmp.setMultiSelectionEnabled(true);
+            loadEmp.showOpenDialog(null);
+            seleccionados = loadEmp.getSelectedFiles();
 
+            for (File seleccionado : seleccionados) {
+                bf = new BufferedReader(new FileReader(seleccionado));
+                System.out.println(seleccionado.toString());
+                
+                while ((linea = bf.readLine()) != null) {
+                    String[] parts = linea.split("\\s");
+                    for (String part : parts) {
+                        instrucciones[i] = Integer.valueOf(part);
+                        i++;
+                    }
+                    System.out.println(linea);
+                    //close stream, files stops loading
                 }
+                
+                    bf.close();
             }
         } catch (IOException ex) {
-            Logger.getLogger(MIPS.class
-                    .getName()).log(Level.SEVERE, null, ex);
+        } //catches nullpointer exception, file not found
+        catch (NullPointerException ex) {
         }
+
+        /*try {
+
+         BufferedReader bf = new BufferedReader(new FileReader("HILO-C.txt"));
+         String linea = "";
+         int i = 0;
+         while ((linea = bf.readLine()) != null) {
+         String[] parts = linea.split("\\s");
+         for (String part : parts) {
+         instrucciones[i] = Integer.valueOf(part);
+         i++;
+
+         }
+         }
+         } catch (IOException ex) {
+         Logger.getLogger(MIPS.class
+         .getName()).log(Level.SEVERE, null, ex);
+         }*/
     }
 
     static void imprimirVecInstrucciones() {
@@ -685,4 +760,70 @@ public class MIPS {
             }
         }
     }
+    
+    static void imprimirCache(){
+        for(int i = 0 ; i < 6;  i++) {
+            for (int j = 0; j < 8; j++){
+                System.out.print(cache[i][j]+"\t");
+            }
+            System.out.print("\n");
+        }
+    
+    }
+    
+    static boolean hitDeEscritura(int dir){
+        boolean x = false;
+        
+        int bloque = (dir/4)%8;
+        if(cache[4][bloque] == dir/4){ // si el bloque está en caché
+            
+
+          if(cache[5][bloque] == 1){ //modificado
+              x = true;
+          }
+          
+          if(cache[5][bloque] == 2){ //compartido
+              x = true;
+          }
+            
+            
+        }
+        
+        return x;
+    }
+    
+    
+    static void resolverFalloDeCache(int dir){
+        //System.out.println("Antes del Fallo \n");
+        //imprimirCache();
+        System.out.println("\n");
+        int bloque = (dir/4)%8;
+        if(cache[5][bloque] == 1){ //modificado
+             
+            for(int i = 0 ; i < 4 ; i++){
+            datos[(cache[4][bloque]*4)+i] = cache[i][bloque];
+        }
+            
+          }
+       
+        for(int i = 0 ; i < 4 ; i++){               //Sube los datos de memoria a cache
+            cache[i][bloque] = datos[(dir/4)+i];
+        }
+        cache[4][bloque] = dir/4;                   //cambia la etiqueta
+        cache[5][bloque] = 2;                       // estado = compartido
+        //System.out.println("Despues del Fallo \n");
+        //imprimirCache();
+    }
+    
+    static void cacheAMemoria(){
+        for(int p = 0; p < 8; p++){
+            for(int i = 0 ; i < 4 ; i++){
+                if(cache[5][p] == 1){                       //si está modificado
+                    datos[(cache[4][p]*4)+i] = cache[i][p];
+                }
+            }
+        }
+            
+    }
+    
 }
