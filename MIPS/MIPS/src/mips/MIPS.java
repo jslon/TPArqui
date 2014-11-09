@@ -23,9 +23,10 @@ public class MIPS {
     */
     
     static int clock = 1;
-    static int[] datos = new int[832];
+    static int[] datos = new int[832*4];
     static int[] instrucciones = new int[768];
     static int[] registros = new int[32];
+    static int   RL = 0;
     static int[][] cache   = new int [6][8];
     static int[] instruccionIF = new int[4];
     static int[] instruccionID = new int[5];
@@ -41,6 +42,7 @@ public class MIPS {
     static int resultadoMW = 0;                              // de Men a Wb 
     private static Semaphore[] sem = new Semaphore[]{new Semaphore(1), new Semaphore(1), new Semaphore(1), new Semaphore(1)};
     private static Semaphore semReg = new Semaphore(1);
+    private static Semaphore semPC  = new Semaphore(1);
     static CyclicBarrier barrier = new CyclicBarrier(6);
 
     static CyclicBarrier IFaID = new CyclicBarrier(2);
@@ -86,7 +88,8 @@ public class MIPS {
                     }
 
                     pc += 4;
-
+                    semPC.release();
+                    
                     /*
                      System.out.println("Instruccion en IF:\t");
                      for (int i = 0; i < 4; i++) {
@@ -104,6 +107,7 @@ public class MIPS {
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    
                     cambioEtapa(0);
 
                     sem[0].release(1);
@@ -168,51 +172,169 @@ public class MIPS {
                         if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0) {  //Si los registros op1 y op2 están libres
                             instruccionID[4] = op2;
                             cambioEtapa(1);
+                            tablaReg[instruccionID[1]]++;
+                            tablaReg[instruccionID[2]]++; 
+                        }
+                        else{
+                            cambioEtapa(-1);
                         }
                     }
                     if (opCode == 35) {
                         if (tablaReg[instruccionID[2]] == 0) {	//Si el registro op2 está libre
                             instruccionID[4] = op2;
                             cambioEtapa(1);
+                            tablaReg[instruccionID[2]]++;
+                        }
+                        else{
+                            cambioEtapa(-1);
                         }
                     }
                     if (opCode == 32) {
                         if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
                             instruccionID[4] = op3;
                             cambioEtapa(1);
+                            tablaReg[instruccionID[1]]++;
+                            tablaReg[instruccionID[2]]++; 
+                        }
+                        else{
+                            cambioEtapa(-1);
                         }
                     }
                     if (opCode == 12) {
                         if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
                             instruccionID[4] = op3;
                             cambioEtapa(1);
+                            tablaReg[instruccionID[1]]++;
+                            tablaReg[instruccionID[2]]++; 
+                        }
+                        else{
+                            cambioEtapa(-1);
                         }
                     }
                     if (opCode == 14) {
                         if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
                             instruccionID[4] = op3;
                             cambioEtapa(1);
+                            tablaReg[instruccionID[1]]++;
+                            tablaReg[instruccionID[2]]++; 
+                        }
+                        else{
+                            cambioEtapa(-1);
                         }
                     }
                     if (opCode == 34) {
                         if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
                             instruccionID[4] = op3;
                             cambioEtapa(1);
+                            tablaReg[instruccionID[1]]++;
+                            tablaReg[instruccionID[2]]++; 
+                        }
+                        else{
+                            cambioEtapa(-1);
                         }
                     }
                     if (opCode == 43) {
                         if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0) {  //Si los registros op1 y op2 están libres
                             instruccionID[4] = op2;
                             cambioEtapa(1);
+                            tablaReg[instruccionID[1]]++;
+                            tablaReg[instruccionID[2]]++; 
+                        }
+                        else{
+                            cambioEtapa(-1);
                         }
                     }
                     if (opCode == 4) {                           //BEQZ
+                        if (tablaReg[instruccionID[1]] == 0) {
+                            if (registros[instruccionID[1]] == 0) {
+                                try {
+                                    semPC.acquire();
+                                } catch (InterruptedException ex) {
+                                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                pc += (instruccionID[3]*4);
+                                semPC.release();
+                                cambioEtapa(1);
+                            }
+                        }
+                        else{
+                            cambioEtapa(-1);
+                        }
+
                     }
                     if (opCode == 5) {                           //BNEZ
+                        if (tablaReg[instruccionID[1]] == 0) {
+                            if (registros[instruccionID[1]] != 0) {
+                                try {
+                                    semPC.acquire();
+                                } catch (InterruptedException ex) {
+                                    Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                                pc += (instruccionID[3]*4);
+                                semPC.release();
+                                cambioEtapa(1);
+                            }
+                        }
+                        else{
+                            cambioEtapa(-1);
+                        }
+                        
                     }
                     if (opCode == 3) {                           //JAL
+                        if (tablaReg[31] == 0) {
+                            try {
+                                semPC.acquire();
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            registros[31]= pc;
+                            pc += (instruccionID[1]*4);
+                            semPC.release();
+                            cambioEtapa(1);
+                            
+                        } 
+                        else {
+                            cambioEtapa(-1);
+                        }
+
                     }
                     if (opCode == 2) {                           //JR
+                        if(tablaReg[instruccionID[1]] == 0){
+                            try {
+                                semPC.acquire();
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                            pc = registros[instruccionID[1]];
+                            semPC.release();
+                            cambioEtapa(1);
+                        
+                        }
+                        else{
+                            cambioEtapa(-1);
+                        }
+                    }
+                    if (opCode == 50) {                          //LL 
+                        if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0) {  //Si los registros op1 y op2 están libres
+                            instruccionID[4] = op2;
+                            cambioEtapa(1);
+                            tablaReg[instruccionID[1]]++;
+                            tablaReg[instruccionID[2]]++; 
+                        }
+                        else{
+                            cambioEtapa(-1);
+                        }
+                    }
+                    if (opCode == 51) {                          //SC
+                        if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0) {  //Si los registros op1 y op2 están libres
+                            instruccionID[4] = op2;
+                            cambioEtapa(1);
+                            tablaReg[instruccionID[1]]++;
+                            tablaReg[instruccionID[2]]++; 
+                        }
+                        else{
+                            cambioEtapa(-1);
+                        }
                     }
 
                     sem[1].release();
@@ -283,17 +405,24 @@ public class MIPS {
                         resultado = sw(op1, op2, op3);
                     }
                     if (opCode == 4) {                  //BEQZ
-                        resultado = beqz(op1, op2, op3);
+                    //    resultado = beqz(op1, op2, op3);
                     }
                     if (opCode == 5) {                  //BNEZ
-                        resultado = bnez(op1, op2, op3);
+                    //    resultado = bnez(op1, op2, op3);
                     }
                     if (opCode == 3) {                  //JAL
-                        resultado = jal(op3);
+                    //    resultado = jal(op3);
                     }
                     if (opCode == 2) {                  //JR
-                        resultado = jr(op1);
+                    //    resultado = jr(op1);
                     }
+                    if (opCode == 50){                  //LL
+                        resultado = ll(op2,op3);
+                    }
+                    if (opCode == 51){                  //SC
+                        resultado = sc(op2, op3);
+                    } 
+                    
                     if (opCode == 63) {                  //FIN
                         banderaFin[2] = 1;
                     }
@@ -413,6 +542,38 @@ public class MIPS {
                         }
                         
                     }
+                    
+                    if(opCode == 50){                               //ll
+                        if(hitDeEscritura(resultadoMem)){
+                            resultadoMem = cache[resultadoMem%(((resultadoMem/4))*4)][(resultadoMem/4)%8];
+                            RL = resultadoMem;
+                        }
+                        else{
+                            resolverFalloDeCache(resultadoMem);
+                            RL = resultadoMem;
+                        }
+                        
+                    
+                    }
+                    
+                    if(opCode == 51){                                 //sc
+                        if(hitDeEscritura(resultadoMem)){
+                            if (RL != -1){                  //si es atómico
+                                if(resultadoMem == RL){
+                                    cache[resultadoMem%(((resultadoMem/4))*4)][(resultadoMem/4)%8] = 1;
+                                }
+                            }
+                        }
+                        else{
+                            resolverFalloDeCache(resultadoMem);
+                            if (RL != -1){                  //si es atómico
+                                if(resultadoMem == RL){
+                                    cache[resultadoMem%(((resultadoMem/4))*4)][(resultadoMem/4)%8] = 1;
+                                }
+                            }
+                        }
+                        
+                    }
 
                     try {
                         sem[3].acquire();
@@ -490,38 +651,62 @@ public class MIPS {
                     if (opCode == 43) {
 
                     }
+                    if (opCode == 50) {         //ll
+                        registros[regDestino] = cache[resultadoMW%(((resultadoMW/4))*4)][(resultadoMW/4)%8];
+
+                    }
+                    if (opCode == 51) {         //sc
+                        if (RL != -1) {                  //si es atómico
+                            registros[regDestino] = 1;
+
+                        } else {
+                            registros[regDestino] = 0;
+                        }
+                    }
+                    
 
                     //Liberacion de los registros
                     if (opCode == 8) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
+                        tablaReg[op1]--;
+                        tablaReg[op2]--;
                     }
                     if (opCode == 35) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
+                        tablaReg[op1]--;
+                        tablaReg[op2]--;
                     }
                     if (opCode == 32) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
-                        tablaReg[op3] = 0;
+                        tablaReg[op1]--;
+                        tablaReg[op2]--;
+                        tablaReg[op3]--;
                     }
                     if (opCode == 12) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
-                        tablaReg[op3] = 0;
+                        tablaReg[op1]--;
+                        tablaReg[op2]--;
+                        tablaReg[op3]--;
                     }
                     if (opCode == 14) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
-                        tablaReg[op3] = 0;
+                        tablaReg[op1]--;
+                        tablaReg[op2]--;
+                        tablaReg[op3]--;
                     }
                     if (opCode == 34) {
-                        tablaReg[op1] = 0;
-                        tablaReg[op2] = 0;
-                        tablaReg[op3] = 0;
+                        tablaReg[op1]--;
+                        tablaReg[op2]--;
+                        tablaReg[op3]--;
                     }
                     if (opCode == 43) {
+                        tablaReg[op1]--;
+                        tablaReg[op2]--;
                     }
+                    if (opCode == 50){
+                        tablaReg[op1]--;
+                        tablaReg[op2]--;
+                    }
+                    if (opCode == 51){
+                        tablaReg[op1]--;
+                        tablaReg[op2]--;
+                    }
+                    
 
                     sem[3].release(1);
                     semReg.release();
@@ -543,7 +728,8 @@ public class MIPS {
             public void run() {
 
                 cargarInstrucciones();
-
+                
+                semPC.drainPermits();
                 sem[0].drainPermits();
                 sem[1].drainPermits();
                 sem[2].drainPermits();
@@ -559,11 +745,13 @@ public class MIPS {
                 while (banderaFin[0] == 0 || banderaFin[1] == 0 || banderaFin[2] == 0 || banderaFin[3] == 0 || banderaFin[4] == 0) {
                     try {
                         barrier.await();
-
+                        
+                        semPC.drainPermits();
                         sem[0].drainPermits();
                         sem[1].drainPermits();
                         sem[2].drainPermits();
                         sem[3].drainPermits();
+                        
 
                         try {
                             semReg.acquire();
@@ -654,6 +842,17 @@ public class MIPS {
         int resultado = rx;
         return resultado;
     }
+    
+    static int ll(int rx, int n ){
+        int resultado = n + registros[rx];
+        return resultado;
+    }
+    
+    static int sc(int rx, int n){
+        int resultado = n + registros[rx];
+        return resultado;
+    }
+    
 
     static void cargarInstrucciones() {
         try {
@@ -742,7 +941,11 @@ public class MIPS {
     }
 
     static void cambioEtapa(int x) {
-        if (x == 0) {
+        if(x == -1){
+            for (int i = 0; i < 4; i++) {
+                instruccionEX[i] = 0;
+            }
+        } else if (x == 0) {
             for (int i = 0; i < 4; i++) {
                 instruccionID[i] = instruccionIF[i];
             }
@@ -825,5 +1028,7 @@ public class MIPS {
         }
             
     }
+    
+    
     
 }
