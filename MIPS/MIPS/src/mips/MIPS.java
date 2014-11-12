@@ -43,6 +43,8 @@ public class MIPS {
     private static Semaphore semReg = new Semaphore(1);
     private static Semaphore semPC = new Semaphore(1);
     private static Semaphore semMataProc = new Semaphore(1);
+    private static Semaphore semMataProc2 = new Semaphore(1);
+    private static Semaphore semEsperaProc = new Semaphore(1);
     static CyclicBarrier barrier = new CyclicBarrier(6);
 
     static CyclicBarrier IFaID = new CyclicBarrier(2);
@@ -59,7 +61,7 @@ public class MIPS {
 
     static int relojProcesos[];
 
-    static int HilosCompletados = 0;
+    static int HilosCompletados = 10000;
 
     public static void main(String[] args) {
 
@@ -121,7 +123,12 @@ public class MIPS {
                         if (semMataProc.tryAcquire()) {
                             pc += -4;
                             cambioEtapa(-5);
-                        } else {
+                        } else if (semMataProc2.tryAcquire()) {
+                            cambioEtapa(-5);
+                        } else if (semEsperaProc.tryAcquire()){
+                            pc += -4;
+                        }
+                        else {
                             cambioEtapa(0);
                         }
 
@@ -193,6 +200,7 @@ public class MIPS {
                                 tablaReg[instruccionID[2]]++;
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
                         }
                         if (opCode == 35) {
@@ -202,6 +210,7 @@ public class MIPS {
                                 tablaReg[instruccionID[2]]++;
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
                         }
                         if (opCode == 32) {
@@ -212,6 +221,7 @@ public class MIPS {
                                 tablaReg[instruccionID[2]]++;
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
                         }
                         if (opCode == 12) {
@@ -222,6 +232,7 @@ public class MIPS {
                                 tablaReg[instruccionID[2]]++;
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
                         }
                         if (opCode == 14) {
@@ -232,6 +243,7 @@ public class MIPS {
                                 tablaReg[instruccionID[2]]++;
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
                         }
                         if (opCode == 34) {
@@ -242,6 +254,7 @@ public class MIPS {
                                 tablaReg[instruccionID[2]]++;
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
                         }
                         if (opCode == 43) {
@@ -252,6 +265,7 @@ public class MIPS {
                                 tablaReg[instruccionID[2]]++;
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
                         }
                         if (opCode == 4) {                           //BEQZ
@@ -264,11 +278,14 @@ public class MIPS {
                                     }
                                     pc += (instruccionID[3] * 4);
                                     semPC.release();
-                                    semMataProc.release();
+                                    semMataProc2.release();
                                     cambioEtapa(1);
+                                } else {
+                                    semMataProc.release();
                                 }
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
 
                         }
@@ -282,11 +299,14 @@ public class MIPS {
                                     }
                                     pc += (instruccionID[3] * 4);
                                     semPC.release();
-                                    semMataProc.release();
+                                    semMataProc2.release();
                                     cambioEtapa(1);
+                                } else {
+                                    semMataProc.release();
                                 }
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
 
                         }
@@ -300,11 +320,12 @@ public class MIPS {
                                 registros[31] = pc;
                                 pc += (instruccionID[1] * 4);
                                 semPC.release();
-                                semMataProc.release();
+                                semMataProc2.release();
                                 cambioEtapa(1);
 
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
 
                         }
@@ -317,11 +338,12 @@ public class MIPS {
                                 }
                                 pc = registros[instruccionID[1]];
                                 semPC.release();
-                                semMataProc.release();
+                                semMataProc2.release();
                                 cambioEtapa(1);
 
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
                         }
                         if (opCode == 50) {                          //LL 
@@ -332,6 +354,7 @@ public class MIPS {
                                 tablaReg[instruccionID[2]]++;
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
                         }
                         if (opCode == 51) {                          //SC
@@ -342,6 +365,7 @@ public class MIPS {
                                 tablaReg[instruccionID[2]]++;
                             } else {
                                 cambioEtapa(-1);
+                                semEsperaProc.release();
                             }
                         }
 
@@ -498,23 +522,6 @@ public class MIPS {
                             banderaFin[3] = 1;
                         }
 
-                        /*if (opCode == 35 || opCode == 43) {		//Si la instrucción es LW o SW
-                         resultadoMem = resultadoEM;
-                         if (opCode == 43) {	// este puede escribir
-                         datos[resultadoMem] = registros[resultadoMem]; //se le guarda el valor del registros
-                         } 
-                         else { 							//saca el valor de memoria y lo guarda en esta variable
-                         //valMemoriaLW = datos[resultadoMem];
-                         resultadoMem = datos[resultadoMem];
-                         }
-                         }
-                         else {                      //Si es cualquier otra intruccion
-                         if(opCode == 8 || opCode == 32 || opCode == 34 || opCode == 12 || opCode == 14) {
-                         resultadoMem = resultadoEM;
-                         }
-                    
-                         }
-                         */
                         resultadoMem = resultadoEM;
                         if (opCode == 35) {         //load
                             if (hitDeEscritura(resultadoMem)) {
@@ -733,7 +740,9 @@ public class MIPS {
 
                 cargarInstrucciones();
 
+                semEsperaProc.drainPermits();
                 semMataProc.drainPermits();
+                semMataProc2.drainPermits();
                 semPC.drainPermits();
                 sem[0].drainPermits();
                 sem[1].drainPermits();
@@ -751,7 +760,9 @@ public class MIPS {
                     try {
                         barrier.await();
 
+                        semEsperaProc.drainPermits();
                         semMataProc.drainPermits();
+                        semMataProc2.drainPermits();
                         semPC.drainPermits();
                         sem[0].drainPermits();
                         sem[1].drainPermits();
@@ -886,7 +897,6 @@ public class MIPS {
             BufferedReader bf;//needed*
             int i = 0;
             String linea = "";
-            // File f = new File("Desktop");
 
             File directorio = new File(System.getProperty("user.dir"));
             loadEmp.setCurrentDirectory(directorio);
@@ -919,23 +929,6 @@ public class MIPS {
         catch (NullPointerException ex) {
         }
 
-        /*try {
-
-         BufferedReader bf = new BufferedReader(new FileReader("HILO-C.txt"));
-         String linea = "";
-         int i = 0;
-         while ((linea = bf.readLine()) != null) {
-         String[] parts = linea.split("\\s");
-         for (String part : parts) {
-         instrucciones[i] = Integer.valueOf(part);
-         i++;
-
-         }
-         }
-         } catch (IOException ex) {
-         Logger.getLogger(MIPS.class
-         .getName()).log(Level.SEVERE, null, ex);
-         }*/
     }
 
     static void imprimirVecInstrucciones() {
