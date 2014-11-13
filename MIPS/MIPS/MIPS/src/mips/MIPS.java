@@ -1055,7 +1055,7 @@ public class MIPS {
         }
 
         for (int i = 0; i < 4; i++) {               //Sube los datos de memoria a cache
-            cache[i][bloque] = datos[((dir-768) / 4) + i];
+            cache[i][bloque] = datos[((dir-768) / 4) + i]; // :)
         }
         cache[4][bloque] = dir / 4;                   //cambia la etiqueta
         cache[5][bloque] = 2;                       // estado = compartido
