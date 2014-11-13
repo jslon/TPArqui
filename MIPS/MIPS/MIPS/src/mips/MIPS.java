@@ -61,7 +61,7 @@ public class MIPS {
 
     static int relojProcesos[];
 
-    static int HilosCompletados = 10000;
+    static int HilosCompletados = 100000;
 
     public static void main(String[] args) {
 
@@ -90,7 +90,8 @@ public class MIPS {
         //Hilos
         final Runnable instructionFetch = new Runnable() {
             public void run() {
-                while (HilosCompletados < numProc) {
+                //while (HilosCompletados < numProc) 
+                {
                     while (banderaFin[0] == 0) {
 
                         // System.out.println("PC: " + pc);
@@ -130,6 +131,7 @@ public class MIPS {
                         }
                         else {
                             cambioEtapa(0);
+                            System.out.println("pasé x aqui");
                         }
 
                         sem[0].release(1);
@@ -161,7 +163,8 @@ public class MIPS {
 
         final Runnable instructionDecode = new Runnable() {
             public void run() {
-                while (HilosCompletados < numProc) {
+                //while (HilosCompletados < numProc) 
+                {
                     while (banderaFin[1] == 0) {
                         int opCode = instruccionID[0];
                         int op1 = instruccionID[1];
@@ -219,6 +222,7 @@ public class MIPS {
                                 cambioEtapa(1);
                                 tablaReg[instruccionID[1]]++;
                                 tablaReg[instruccionID[2]]++;
+                                tablaReg[instruccionID[3]]++;
                             } else {
                                 cambioEtapa(-1);
                                 semEsperaProc.release();
@@ -230,6 +234,7 @@ public class MIPS {
                                 cambioEtapa(1);
                                 tablaReg[instruccionID[1]]++;
                                 tablaReg[instruccionID[2]]++;
+                                tablaReg[instruccionID[3]]++;
                             } else {
                                 cambioEtapa(-1);
                                 semEsperaProc.release();
@@ -241,6 +246,7 @@ public class MIPS {
                                 cambioEtapa(1);
                                 tablaReg[instruccionID[1]]++;
                                 tablaReg[instruccionID[2]]++;
+                                tablaReg[instruccionID[3]]++;
                             } else {
                                 cambioEtapa(-1);
                                 semEsperaProc.release();
@@ -252,6 +258,7 @@ public class MIPS {
                                 cambioEtapa(1);
                                 tablaReg[instruccionID[1]]++;
                                 tablaReg[instruccionID[2]]++;
+                                tablaReg[instruccionID[3]]++;
                             } else {
                                 cambioEtapa(-1);
                                 semEsperaProc.release();
@@ -282,6 +289,7 @@ public class MIPS {
                                     cambioEtapa(1);
                                 } else {
                                     semMataProc.release();
+                                    cambioEtapa(1);
                                 }
                             } else {
                                 cambioEtapa(-1);
@@ -289,9 +297,11 @@ public class MIPS {
                             }
 
                         }
-                        if (opCode == 5) {                           //BNEZ
+                        if (opCode == 5) {    //BNEZ
                             if (tablaReg[instruccionID[1]] == 0) {
+                                System.out.println("segundo if ");
                                 if (registros[instruccionID[1]] != 0) {
+                                    System.out.println("tercer if");
                                     try {
                                         semPC.acquire();
                                     } catch (InterruptedException ex) {
@@ -301,8 +311,14 @@ public class MIPS {
                                     semPC.release();
                                     semMataProc2.release();
                                     cambioEtapa(1);
-                                } else {
+                                    System.out.println("pc: "+pc);
+                                    System.out.println("pase por BNEZ ");
+                                } 
+                                else {
+                                    System.out.println("pase por BNEZ ");
+                                    System.out.println("pc: "+pc);
                                     semMataProc.release();
+                                    cambioEtapa(1);
                                 }
                             } else {
                                 cambioEtapa(-1);
@@ -400,7 +416,8 @@ public class MIPS {
 
         final Runnable execute = new Runnable() {
             public void run() {
-                while (HilosCompletados < numProc) {
+                //while (HilosCompletados < numProc) 
+                {
                     while (banderaFin[2] == 0) {
                         int opCode = instruccionEX[0];
                         int op1 = instruccionEX[1];
@@ -500,7 +517,8 @@ public class MIPS {
 
         final Runnable memory = new Runnable() {
             public void run() {
-                while (HilosCompletados < numProc) {
+                //while (HilosCompletados < numProc) 
+                {
                     while (banderaFin[3] == 0) {
 
                         int opCode = instruccionMEM[0];
@@ -622,7 +640,8 @@ public class MIPS {
 
         final Runnable writeBack = new Runnable() {
             public void run() {
-                while (HilosCompletados < numProc) {
+                //while (HilosCompletados < numProc) 
+                {
                     while (banderaFin[4] == 0) {
                         int opCode = instruccionWB[0];
                         int op1 = instruccionWB[1];
@@ -640,6 +659,8 @@ public class MIPS {
                         if (opCode == 63) {
                             banderaFin[4] = 1;
                             HilosCompletados += 1;
+                            System.out.println("hola llegue al final :)");
+                            
                         }
 
                         if (opCode == 8) {
@@ -756,7 +777,7 @@ public class MIPS {
                 new Thread(memory).start();
                 new Thread(writeBack).start();
 
-                while ((banderaFin[0] == 0 || banderaFin[1] == 0 || banderaFin[2] == 0 || banderaFin[3] == 0 || banderaFin[4] == 0) && (HilosCompletados != numProc)) {
+                while ((banderaFin[0] == 0 || banderaFin[1] == 0 || banderaFin[2] == 0 || banderaFin[3] == 0 || banderaFin[4] == 0) /*&& (HilosCompletados != numProc)*/) {
                     try {
                         barrier.await();
 
@@ -775,7 +796,8 @@ public class MIPS {
                         } catch (InterruptedException ex) {
                             Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                         }
-
+                        
+                        
                         clock++;
                         barrier.await();
 
@@ -786,7 +808,7 @@ public class MIPS {
                     }
 
                 }
-
+                
                 //imprimirVecInstrucciones();
                 imprimirRegistros();
                 imprimirCache();
@@ -1023,7 +1045,7 @@ public class MIPS {
         //System.out.println("Antes del Fallo \n");
         //imprimirCache();
         System.out.println("\n");
-        int bloque = (dir / 4) % 8;
+        int bloque = ((dir-768) / 4) /4% 8;
         if (cache[5][bloque] == 1) { //modificado
 
             for (int i = 0; i < 4; i++) {
@@ -1033,7 +1055,7 @@ public class MIPS {
         }
 
         for (int i = 0; i < 4; i++) {               //Sube los datos de memoria a cache
-            cache[i][bloque] = datos[(dir / 4) + i];
+            cache[i][bloque] = datos[((dir-768) / 4) + i];
         }
         cache[4][bloque] = dir / 4;                   //cambia la etiqueta
         cache[5][bloque] = 2;                       // estado = compartido
