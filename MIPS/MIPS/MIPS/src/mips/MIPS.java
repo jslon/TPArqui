@@ -564,7 +564,9 @@ public class MIPS {
                             } catch (java.lang.ArithmeticException exc) {
                                 if (hitDeEscritura(resultadoMem)) {
                                     cache[0][0] = registros[regDestino];
-                                } else {
+                                    cache[0][5] = 1;
+                                } 
+                                else {
                                     resolverFalloDeCache(resultadoMem);
                                     cache[0][0] = registros[regDestino];
                                     cache[0][5] = 1;
@@ -1046,18 +1048,19 @@ public class MIPS {
         //imprimirCache();
         System.out.println("\n");
         int bloque = ((dir-768) / 4) /4 % 8;
+        
         if (cache[5][bloque] == 1) { //modificado
 
             for (int i = 0; i < 4; i++) {
-                datos[(cache[5][bloque] * 4) + i] = cache[i][bloque];
+                datos[(cache[4][bloque] * 4) + i] = cache[i][bloque];
             }
 
         }
 
         for (int i = 0; i < 4; i++) {               //Sube los datos de memoria a cache
-            cache[i][bloque] = datos[(((dir-768) / 4) / 4) + i]; // :)
+            cache[i][bloque] = datos[(((dir - 768)/4)/4)*4 + i]; // :)
         }
-        cache[4][bloque] = (dir - 768) / 4;                   //cambia la etiqueta
+        cache[4][bloque] = ((dir - 768) /4)/4;                   //cambia la etiqueta
         cache[5][bloque] = 2;                       // estado = compartido
         //System.out.println("Despues del Fallo \n");
         //imprimirCache();
