@@ -22,7 +22,7 @@ public class MIPS {
      *           -1 = invalido
      */
     static int clock = 1;
-    static int[] datos = new int[832 * 4];
+    static int[] datos = new int[832];
     static int[] instrucciones = new int[768];
     static int[] registros = new int[32];
     static int RL = 0;
@@ -1025,7 +1025,7 @@ public class MIPS {
     static boolean hitDeEscritura(int dir) {
         boolean x = false;
 
-        int bloque = (dir / 4) % 8;
+        int bloque = ((dir - 768) / 4) % 8;
         if (cache[4][bloque] == dir / 4) { // si el bloque está en caché
 
             if (cache[5][bloque] == 1) { //modificado
@@ -1045,19 +1045,19 @@ public class MIPS {
         //System.out.println("Antes del Fallo \n");
         //imprimirCache();
         System.out.println("\n");
-        int bloque = ((dir-768) / 4) /4% 8;
+        int bloque = ((dir-768) / 4) /4 % 8;
         if (cache[5][bloque] == 1) { //modificado
 
             for (int i = 0; i < 4; i++) {
-                datos[(cache[4][bloque] * 4) + i] = cache[i][bloque];
+                datos[(cache[5][bloque] * 4) + i] = cache[i][bloque];
             }
 
         }
 
         for (int i = 0; i < 4; i++) {               //Sube los datos de memoria a cache
-            cache[i][bloque] = datos[((dir-768) / 4) + i]; // :)
+            cache[i][bloque] = datos[(((dir-768) / 4) / 4) + i]; // :)
         }
-        cache[4][bloque] = dir / 4;                   //cambia la etiqueta
+        cache[4][bloque] = (dir - 768) / 4;                   //cambia la etiqueta
         cache[5][bloque] = 2;                       // estado = compartido
         //System.out.println("Despues del Fallo \n");
         //imprimirCache();
