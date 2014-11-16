@@ -126,9 +126,12 @@ public class MIPS {
                             cambioEtapa(-5);
                         } else if (semMataProc2.tryAcquire()) {
                             cambioEtapa(-5);
-                            pc += -4;
                         } else if (semEsperaProc.tryAcquire()){
                             pc += -4;
+                            if (instruccionIF[0] == 63) //Si la instrucción es FIN
+                            {
+                            banderaFin[0] = 0;
+                            }
                         }
                         else {
                             cambioEtapa(0);
@@ -286,7 +289,7 @@ public class MIPS {
                                     }
                                     pc += (instruccionID[3] * 4);
                                     semPC.release();
-                                    semMataProc2.release();
+                                    semMataProc.release();
                                     cambioEtapa(1);
                                 } else {
                                     semMataProc.release();
@@ -310,7 +313,7 @@ public class MIPS {
                                     }
                                     pc += (instruccionID[3] * 4);
                                     semPC.release();
-                                    semMataProc2.release();
+                                    semMataProc.release();
                                     cambioEtapa(1);
                                     System.out.println("pc: "+pc);
                                     System.out.println("pase por BNEZ ");
@@ -335,11 +338,10 @@ public class MIPS {
                                     Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                                 }
                                 registros[31] = pc;
-                                pc += (instruccionID[1] * 4);
+                                pc += (instruccionID[1]);
                                 semPC.release();
-                                semMataProc2.release();
+                                semMataProc.release();
                                 cambioEtapa(1);
-
                             } else {
                                 cambioEtapa(-1);
                                 semEsperaProc.release();
@@ -355,9 +357,8 @@ public class MIPS {
                                 }
                                 pc = registros[instruccionID[1]];
                                 semPC.release();
-                                semMataProc2.release();
+                                semMataProc.release();
                                 cambioEtapa(1);
-
                             } else {
                                 cambioEtapa(-1);
                                 semEsperaProc.release();
@@ -456,16 +457,12 @@ public class MIPS {
                             resultado = sw(op1, op2, op3);
                         }
                         if (opCode == 4) {                  //BEQZ
-                            //    resultado = beqz(op1, op2, op3);
                         }
                         if (opCode == 5) {                  //BNEZ
-                            //    resultado = bnez(op1, op2, op3);
                         }
                         if (opCode == 3) {                  //JAL
-                            //    resultado = jal(op3);
                         }
                         if (opCode == 2) {                  //JR
-                            //    resultado = jr(op1);
                         }
                         if (opCode == 50) {                  //LL
                             resultado = ll(op2, op3);
@@ -743,7 +740,7 @@ public class MIPS {
                             tablaReg[op2]--;
                         }
 
-                        sem[3].release(1);
+                        sem[3].release();
                         semReg.release();
 
                         try {
@@ -990,11 +987,11 @@ public class MIPS {
 
     static void cambioEtapa(int x) {
         if (x == -5) {                                  //Este es el caso en que se mata la instrucción en IF y se pasa una operación vacía a ID
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 5; i++) {
                 instruccionID[i] = 0;
             }
         } else if (x == -1) {
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 5; i++) {
                 instruccionEX[i] = 0;
             }
         } else if (x == 0) {
@@ -1030,7 +1027,7 @@ public class MIPS {
         boolean x = false;
 
         int bloque = (((dir - 768) / 4) / 4) % 8;
-        if (cache[4][bloque] == dir / 4) { // si el bloque está en caché
+        if (cache[4][bloque] == ((dir / 4) / 4)) { // si el bloque está en caché
 
             if (cache[5][bloque] == 1) { //modificado
                 x = true;
@@ -1047,9 +1044,7 @@ public class MIPS {
 
     static void resolverFalloDeCache(int dir) {
         //System.out.println("Antes del Fallo \n");
-        //imprimirCache();
-        
-        //imprimirCache();
+
         System.out.println("\n");
         int bloque = (((dir-768) / 4) / 4) % 8;
         
