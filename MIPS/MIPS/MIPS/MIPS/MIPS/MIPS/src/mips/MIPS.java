@@ -14,6 +14,7 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import javax.swing.*;
 
 public class MIPS {
 
@@ -53,6 +54,9 @@ public class MIPS {
     static CyclicBarrier MEMaWB = new CyclicBarrier(2);
 
     static int numProc = 0;
+    static int salida = 0;
+    static int quantum = 0;
+    static int hiloEnEjecucion = 0;
 
     static int inicioInstHilos[];
     static int regProcesos[][];
@@ -62,6 +66,8 @@ public class MIPS {
     static int relojProcesos[];
 
     static int HilosCompletados = 100000;
+    
+    static int result = 0;
 
     public static void main(String[] args) {
 
@@ -126,19 +132,18 @@ public class MIPS {
                             cambioEtapa(-5);
                         } else if (semMataProc2.tryAcquire()) {
                             cambioEtapa(-5);
-                        } else if (semEsperaProc.tryAcquire()){
+                        } else if (semEsperaProc.tryAcquire()) {
                             pc += -4;
                             if (instruccionIF[0] == 63) //Si la instrucción es FIN
                             {
-                            banderaFin[0] = 0;
+                                banderaFin[0] = 0;
                             }
-                        }
-                        else {
+                        } else {
                             cambioEtapa(0);
                             System.out.println("pasé x aqui");
                         }
 
-                        sem[0].release(1);
+                        sem[0].release();
                         try {
                             barrier.await();
                             barrier.await();                // Este await es para que el hilo general pueda hacer una actualización entre esperas
@@ -150,7 +155,7 @@ public class MIPS {
 
                     }
 
-                    while (banderaFin[4] == 0) {
+                    while (salida != 1) {
                         try {
                             barrier.await();
                             barrier.await();
@@ -199,7 +204,7 @@ public class MIPS {
                             banderaFin[1] = 1;
                         }
 
-                        if (opCode == 8) {      //DADDI
+                        if (opCode == 8) {
                             if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0) {  //Si los registros op1 y op2 están libres
                                 instruccionID[4] = op2;
                                 cambioEtapa(1);
@@ -210,18 +215,19 @@ public class MIPS {
                                 semEsperaProc.release();
                             }
                         }
-                        if (opCode == 35) {     //LOAD
-                            if (tablaReg[instruccionID[2]] == 0) {	//Si el registro op2 está libre
+                        if (opCode == 35) {
+                            if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0) {	//Si el registro op2 está libre
                                 instruccionID[4] = op2;
                                 cambioEtapa(1);
+                                tablaReg[instruccionID[1]]++;
                                 tablaReg[instruccionID[2]]++;
                             } else {
                                 cambioEtapa(-1);
                                 semEsperaProc.release();
                             }
                         }
-                        if (opCode == 32) {                         //DADD
-                            if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
+                        if (opCode == 32) {
+                            if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[instruccionID[3]] == 0) {  //Si los registros op1,op2, op3 están libres
                                 instruccionID[4] = op3;
                                 cambioEtapa(1);
                                 tablaReg[instruccionID[1]]++;
@@ -232,8 +238,8 @@ public class MIPS {
                                 semEsperaProc.release();
                             }
                         }
-                        if (opCode == 12) {                     //DMUL
-                            if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
+                        if (opCode == 12) {
+                            if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[instruccionID[3]] == 0) {  //Si los registros op1,op2, op3 están libres
                                 instruccionID[4] = op3;
                                 cambioEtapa(1);
                                 tablaReg[instruccionID[1]]++;
@@ -244,8 +250,8 @@ public class MIPS {
                                 semEsperaProc.release();
                             }
                         }
-                        if (opCode == 14) {                     //DDIV
-                            if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
+                        if (opCode == 14) {
+                            if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[instruccionID[3]] == 0) {  //Si los registros op1,op2, op3 están libres
                                 instruccionID[4] = op3;
                                 cambioEtapa(1);
                                 tablaReg[instruccionID[1]]++;
@@ -257,7 +263,7 @@ public class MIPS {
                             }
                         }
                         if (opCode == 34) {
-                            if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
+                            if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[instruccionID[3]] == 0) {  //Si los registros op1,op2, op3 están libres
                                 instruccionID[4] = op3;
                                 cambioEtapa(1);
                                 tablaReg[instruccionID[1]]++;
@@ -299,7 +305,6 @@ public class MIPS {
                                 cambioEtapa(-1);
                                 semEsperaProc.release();
                             }
-
                         }
                         if (opCode == 5) {    //BNEZ
                             if (tablaReg[instruccionID[1]] == 0) {
@@ -315,12 +320,11 @@ public class MIPS {
                                     semPC.release();
                                     semMataProc.release();
                                     cambioEtapa(1);
-                                    System.out.println("pc: "+pc);
+                                    System.out.println("pc: " + pc);
                                     System.out.println("pase por BNEZ ");
-                                } 
-                                else {
+                                } else {
                                     System.out.println("pase por BNEZ ");
-                                    System.out.println("pc: "+pc);
+                                    System.out.println("pc: " + pc);
                                     semMataProc.release();
                                     cambioEtapa(1);
                                 }
@@ -328,7 +332,6 @@ public class MIPS {
                                 cambioEtapa(-1);
                                 semEsperaProc.release();
                             }
-
                         }
                         if (opCode == 3) {                           //JAL
                             if (tablaReg[31] == 0) {
@@ -346,7 +349,6 @@ public class MIPS {
                                 cambioEtapa(-1);
                                 semEsperaProc.release();
                             }
-
                         }
                         if (opCode == 2) {                           //JR
                             if (tablaReg[instruccionID[1]] == 0) {
@@ -401,7 +403,7 @@ public class MIPS {
 
                     }
 
-                    while (banderaFin[4] == 0) {
+                    while (salida != 1) {
                         try {
                             barrier.await();
                             barrier.await();
@@ -498,7 +500,7 @@ public class MIPS {
 
                     }
 
-                    while (banderaFin[4] == 0) {
+                    while (salida != 1) {
                         try {
                             barrier.await();
                             barrier.await();
@@ -538,33 +540,31 @@ public class MIPS {
                             banderaFin[3] = 1;
                         }
 
-                        
                         if (opCode == 35) {         //load
                             if (hitDeEscritura(resultadoMem)) {
-                                resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) /4][bloque];
+                                resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][bloque];
                             } else {
                                 resolverFalloDeCache(resultadoMem);
-                                resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) /4][bloque];
+                                resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][bloque];
                             }
                         }
 
                         if (opCode == 43) {         //store
                             try {
                                 if (hitDeEscritura(resultadoMem)) {
-                                    cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) /4][bloque] = registros[regDestino];
+                                    cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][bloque] = registros[regDestino];
                                     cache[5][bloque] = 1;               //pone el estado en modificado
                                 } else {
                                     resolverFalloDeCache(resultadoMem);
                                     imprimirCache();
-                                    cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) /4][bloque] = registros[regDestino];
+                                    cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][bloque] = registros[regDestino];
                                     cache[5][bloque] = 1;               //pone el estado en modificado
                                 }
                             } catch (java.lang.ArithmeticException exc) {
                                 if (hitDeEscritura(resultadoMem)) {
                                     cache[0][0] = registros[regDestino];
                                     cache[0][5] = 1;
-                                } 
-                                else {
+                                } else {
                                     resolverFalloDeCache(resultadoMem);
                                     cache[0][0] = registros[regDestino];
                                     cache[0][5] = 1;
@@ -575,11 +575,11 @@ public class MIPS {
 
                         if (opCode == 50) {                               //ll
                             if (hitDeEscritura(resultadoMem)) {
-                                resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) /4][(resultadoMem / 4) % 8];
+                                resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8];
                                 RL = resultadoMem;
                             } else {
                                 resolverFalloDeCache(resultadoMem);
-                                resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) /4][(resultadoMem / 4) % 8];
+                                resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8];
                                 RL = resultadoMem;
                             }
 
@@ -589,14 +589,14 @@ public class MIPS {
                             if (hitDeEscritura(resultadoMem)) {
                                 if (RL != -1) {                  //si es atómico
                                     if (resultadoMem == RL) {
-                                        cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) /4][(resultadoMem / 4) % 8] = 1;
+                                        cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8] = 1;
                                     }
                                 }
                             } else {
                                 resolverFalloDeCache(resultadoMem);
                                 if (RL != -1) {                  //si es atómico
                                     if (resultadoMem == RL) {
-                                        cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) /4][(resultadoMem / 4) % 8] = 1;
+                                        cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8] = 1;
                                     }
                                 }
                             }
@@ -625,7 +625,7 @@ public class MIPS {
 
                     }
 
-                    while (banderaFin[4] == 0) {
+                    while (salida != 1) {
                         try {
                             barrier.await();
                             barrier.await();
@@ -661,7 +661,7 @@ public class MIPS {
                             banderaFin[4] = 1;
                             HilosCompletados += 1;
                             System.out.println("hola llegue al final :)");
-                            
+                            System.out.println("pc : " + pc);
                         }
 
                         if (opCode == 8) {
@@ -699,43 +699,43 @@ public class MIPS {
                         }
 
                         //Liberacion de los registros
-                        if (opCode == 8) {
+                        if (opCode == 8 && (tablaReg[op1] > 0) && (tablaReg[op2] > 0)) {
                             tablaReg[op1]--;
                             tablaReg[op2]--;
                         }
-                        if (opCode == 35) {
+                        if (opCode == 35 && (tablaReg[op1] > 0) && (tablaReg[op2] > 0)) {
                             tablaReg[op1]--;
                             tablaReg[op2]--;
                         }
-                        if (opCode == 32) {
-                            tablaReg[op1]--;
-                            tablaReg[op2]--;
-                            tablaReg[op3]--;
-                        }
-                        if (opCode == 12) {
+                        if (opCode == 32 && (tablaReg[op1] > 0) && (tablaReg[op2] > 0) && (tablaReg[op3] > 0)) {
                             tablaReg[op1]--;
                             tablaReg[op2]--;
                             tablaReg[op3]--;
                         }
-                        if (opCode == 14) {
+                        if (opCode == 12 && (tablaReg[op1] > 0) && (tablaReg[op2] > 0) && (tablaReg[op3] > 0)) {
                             tablaReg[op1]--;
                             tablaReg[op2]--;
                             tablaReg[op3]--;
                         }
-                        if (opCode == 34) {
+                        if (opCode == 14 && (tablaReg[op1] > 0) && (tablaReg[op2] > 0) && (tablaReg[op3] > 0)) {
                             tablaReg[op1]--;
                             tablaReg[op2]--;
                             tablaReg[op3]--;
                         }
-                        if (opCode == 43) {
+                        if (opCode == 34 && (tablaReg[op1] > 0) && (tablaReg[op2] > 0) && (tablaReg[op3] > 0)) {
+                            tablaReg[op1]--;
+                            tablaReg[op2]--;
+                            tablaReg[op3]--;
+                        }
+                        if (opCode == 43 && (tablaReg[op1] > 0) && (tablaReg[op2] > 0)) {
                             tablaReg[op1]--;
                             tablaReg[op2]--;
                         }
-                        if (opCode == 50) {
+                        if (opCode == 50 && (tablaReg[op1] > 0) && (tablaReg[op2] > 0)) {
                             tablaReg[op1]--;
                             tablaReg[op2]--;
                         }
-                        if (opCode == 51) {
+                        if (opCode == 51 && (tablaReg[op1] > 0) && (tablaReg[op2] > 0)) {
                             tablaReg[op1]--;
                             tablaReg[op2]--;
                         }
@@ -797,7 +797,11 @@ public class MIPS {
                         } catch (InterruptedException ex) {
                             Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                        
+
+                        if(banderaFin[4] == 1)
+                        {
+                        salida = 1;
+                        }
                         
                         clock++;
                         barrier.await();
@@ -809,7 +813,7 @@ public class MIPS {
                     }
 
                 }
-                
+
                 //imprimirVecInstrucciones();
                 imprimirRegistros();
                 imprimirCache();
@@ -920,13 +924,20 @@ public class MIPS {
             BufferedReader bf;//needed*
             int i = 0;
             String linea = "";
+            
 
             File directorio = new File(System.getProperty("user.dir"));
             loadEmp.setCurrentDirectory(directorio);
             loadEmp.setMultiSelectionEnabled(true);
             loadEmp.showOpenDialog(null);
             seleccionados = loadEmp.getSelectedFiles();
-
+            
+            /*
+            seleccionados = loadEmp.getSelectedFiles();
+            if (1 == loadEmp.CANCEL_OPTION)
+            { System.exit(0);}
+            */
+            
             int numHilo = 0;
             creaEstructuras(seleccionados.length);
 
@@ -952,6 +963,8 @@ public class MIPS {
         catch (NullPointerException ex) {
         }
 
+        
+        pedirQuantum();
     }
 
     static void imprimirVecInstrucciones() {
@@ -973,6 +986,14 @@ public class MIPS {
         System.out.println("");
     }
 
+    static void imprimirTabRegistros() {
+        System.out.println("REGISTROS");
+        for (int i = 0; i < tablaReg.length; i++) {
+            System.out.println("R" + i + ": " + tablaReg[i] + " ");
+        }
+        System.out.println("");
+    }
+    
     static void imprimirVecDatos() {
         System.out.println("MEMORIA");
         for (int i = 0; i < datos.length; i++) {
@@ -1046,8 +1067,8 @@ public class MIPS {
         //System.out.println("Antes del Fallo \n");
 
         System.out.println("\n");
-        int bloque = (((dir-768) / 4) / 4) % 8;
-        
+        int bloque = (((dir - 768) / 4) / 4) % 8;
+
         if (cache[5][bloque] == 1) { //modificado
 
             for (int i = 0; i < 4; i++) {
@@ -1057,14 +1078,13 @@ public class MIPS {
         }
 
         for (int i = 0; i < 4; i++) {               //Sube los datos de memoria a cache
-            cache[i][bloque] = datos[(((dir - 768)/4)/4)*4 + i]; // :)
+            cache[i][bloque] = datos[(((dir - 768) / 4) / 4) * 4 + i]; // :)
         }
-        cache[4][bloque] = ((dir - 768) /4)/4;                   //cambia la etiqueta
+        cache[4][bloque] = ((dir - 768) / 4) / 4;                   //cambia la etiqueta
         cache[5][bloque] = 2;                       // estado = compartido
         //System.out.println("Despues del Fallo \n");
         //imprimirCache();
     }
-    
 
     static void cacheAMemoria() {
         for (int p = 0; p < 8; p++) {
@@ -1075,6 +1095,16 @@ public class MIPS {
             }
         }
 
+    }
+    
+    static void pedirQuantum() {
+        try{JFrame frame = new JFrame("¥*¥");
+        String name = JOptionPane.showInputDialog(frame, "Cual es el quantum? Por favor ingrese un numero sino no saldra de aqui.");
+        quantum = Integer.parseInt(name);}
+        catch(Exception e){
+            pedirQuantum();
+        }
+    
     }
 
 }
