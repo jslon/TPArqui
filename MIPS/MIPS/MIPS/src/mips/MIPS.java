@@ -199,7 +199,7 @@ public class MIPS {
                             banderaFin[1] = 1;
                         }
 
-                        if (opCode == 8) {
+                        if (opCode == 8) {      //DADDI
                             if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0) {  //Si los registros op1 y op2 están libres
                                 instruccionID[4] = op2;
                                 cambioEtapa(1);
@@ -210,7 +210,7 @@ public class MIPS {
                                 semEsperaProc.release();
                             }
                         }
-                        if (opCode == 35) {
+                        if (opCode == 35) {     //LOAD
                             if (tablaReg[instruccionID[2]] == 0) {	//Si el registro op2 está libre
                                 instruccionID[4] = op2;
                                 cambioEtapa(1);
@@ -220,7 +220,7 @@ public class MIPS {
                                 semEsperaProc.release();
                             }
                         }
-                        if (opCode == 32) {
+                        if (opCode == 32) {                         //DADD
                             if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
                                 instruccionID[4] = op3;
                                 cambioEtapa(1);
@@ -232,7 +232,7 @@ public class MIPS {
                                 semEsperaProc.release();
                             }
                         }
-                        if (opCode == 12) {
+                        if (opCode == 12) {                     //DMUL
                             if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
                                 instruccionID[4] = op3;
                                 cambioEtapa(1);
@@ -244,7 +244,7 @@ public class MIPS {
                                 semEsperaProc.release();
                             }
                         }
-                        if (opCode == 14) {
+                        if (opCode == 14) {                     //DDIV
                             if (tablaReg[instruccionID[1]] == 0 && tablaReg[instruccionID[2]] == 0 && tablaReg[op3] == 0) {  //Si los registros op1,op2, op3 están libres
                                 instruccionID[4] = op3;
                                 cambioEtapa(1);
