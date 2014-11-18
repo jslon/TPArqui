@@ -26,7 +26,7 @@ public class MIPS {
     static int[] datos = new int[832];
     static int[] instrucciones = new int[768];
     static int[] registros = new int[32];
-    static int RL = 0;
+    static int RL = -1;
     static int[][] cache = new int[6][8];
     static int[] instruccionIF = new int[4];
     static int[] instruccionID = new int[5];
@@ -53,20 +53,18 @@ public class MIPS {
     static CyclicBarrier EXaMEM = new CyclicBarrier(2);
     static CyclicBarrier MEMaWB = new CyclicBarrier(2);
 
-    static int numProc = 0;
+    static int numHilos = 0;
     static int salida = 0;
+    static int contadorQuantum = 0;
     static int quantum = 0;
     static int hiloEnEjecucion = 0;
-
     static int inicioInstHilos[];
     static int regProcesos[][];
     static int RLProcesos[];
     static int PCProcesos[];
-
     static int relojProcesos[];
-
-    static int HilosCompletados = 100000;
-    
+    static int HilosCompletados = 0;
+    static int colaDeEjecucion[];
     static int result = 0;
 
     public static void main(String[] args) {
@@ -96,17 +94,19 @@ public class MIPS {
         //Hilos
         final Runnable instructionFetch = new Runnable() {
             public void run() {
-                //while (HilosCompletados < numProc) 
+                while (HilosCompletados < numHilos) 
                 {
                     while (banderaFin[0] == 0) {
 
                         // System.out.println("PC: " + pc);
                         // Copia la instrucción de la "memoria" al vector de instrucción de IF
-                        for (int i = 0; i < 4; i++) {
+                        if(instruccionIF[0] != 64){
+                            for (int i = 0; i < 4; i++) {
                             instruccionIF[i] = instrucciones[(pc) + i];
-                        }
-
+                            }
+                        
                         pc += 4;
+                        }
                         semPC.release();
 
                         /*
@@ -116,7 +116,7 @@ public class MIPS {
                          }
                          System.out.println("");
                          */
-                        if (instruccionIF[0] == 63) //Si la instrucción es FIN
+                        if ((instruccionIF[0] == 63) || (instruccionIF[0] == 64)) //Si la instrucción es FIN
                         {
                             banderaFin[0] = 1;
                         }
@@ -172,7 +172,7 @@ public class MIPS {
 
         final Runnable instructionDecode = new Runnable() {
             public void run() {
-                //while (HilosCompletados < numProc) 
+                while (HilosCompletados < numHilos) 
                 {
                     while (banderaFin[1] == 0) {
                         int opCode = instruccionID[0];
@@ -199,7 +199,7 @@ public class MIPS {
                             Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                         }
 
-                        if (opCode == 63) {
+                        if ((instruccionID[0] == 63) || (instruccionID[0] == 64)) {
                             cambioEtapa(1);
                             banderaFin[1] = 1;
                         }
@@ -420,7 +420,7 @@ public class MIPS {
 
         final Runnable execute = new Runnable() {
             public void run() {
-                //while (HilosCompletados < numProc) 
+                while (HilosCompletados < numHilos) 
                 {
                     while (banderaFin[2] == 0) {
                         int opCode = instruccionEX[0];
@@ -473,7 +473,7 @@ public class MIPS {
                             resultado = sc(op2, op3);
                         }
 
-                        if (opCode == 63) {                  //FIN
+                        if ((instruccionEX[0] == 63) || (instruccionEX[0] == 64)) {                  //FIN
                             banderaFin[2] = 1;
                         }
 
@@ -517,7 +517,7 @@ public class MIPS {
 
         final Runnable memory = new Runnable() {
             public void run() {
-                //while (HilosCompletados < numProc) 
+                while (HilosCompletados < numHilos) 
                 {
                     while (banderaFin[3] == 0) {
 
@@ -536,7 +536,7 @@ public class MIPS {
                          }
                          System.out.println("");
                          */
-                        if (opCode == 63) {
+                        if ((instruccionMEM[0] == 63) || (instruccionMEM[0] == 64)) {
                             banderaFin[3] = 1;
                         }
 
@@ -641,7 +641,7 @@ public class MIPS {
 
         final Runnable writeBack = new Runnable() {
             public void run() {
-                //while (HilosCompletados < numProc) 
+                while (HilosCompletados < numHilos) 
                 {
                     while (banderaFin[4] == 0) {
                         int opCode = instruccionWB[0];
@@ -657,9 +657,16 @@ public class MIPS {
                          }
                          System.out.println("");
                          */
-                        if (opCode == 63) {
-                            banderaFin[4] = 1;
-                            HilosCompletados += 1;
+                        if ((instruccionWB[0] == 63) || (instruccionWB[0] == 64)) {
+                            if(instruccionWB[0] == 64){
+                                banderaFin[4] = 2;
+                                
+                            }
+                            else{
+                                banderaFin[4] = 1;
+                                colaDeEjecucion[hiloEnEjecucion] = 1;
+                                HilosCompletados += 1;
+                            }
                             System.out.println("hola llegue al final :)");
                             System.out.println("pc : " + pc);
                         }
@@ -761,7 +768,8 @@ public class MIPS {
             public void run() {
 
                 cargarInstrucciones();
-
+                contadorQuantum = quantum;
+                
                 semEsperaProc.drainPermits();
                 semMataProc.drainPermits();
                 semMataProc2.drainPermits();
@@ -778,7 +786,7 @@ public class MIPS {
                 new Thread(memory).start();
                 new Thread(writeBack).start();
 
-                while ((banderaFin[0] == 0 || banderaFin[1] == 0 || banderaFin[2] == 0 || banderaFin[3] == 0 || banderaFin[4] == 0) /*&& (HilosCompletados != numProc)*/) {
+                while ((banderaFin[0] == 0 || banderaFin[1] == 0 || banderaFin[2] == 0 || banderaFin[3] == 0 || banderaFin[4] == 0) && (HilosCompletados < numHilos)) {
                     try {
                         barrier.await();
 
@@ -798,12 +806,25 @@ public class MIPS {
                             Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                         }
 
-                        if(banderaFin[4] == 1)
-                        {
-                        salida = 1;
+                        contadorQuantum--;
+                        clock++;
+                        
+                        if(contadorQuantum == 0){
+                            for(int g = 0; g < 5; g++ ){
+                            instruccionIF[g] = 64;
+                            }
                         }
                         
-                        clock++;
+                        if(banderaFin[4] == 1 || banderaFin[4] == 2) {
+                            cambioDeContexto();
+                            contadorQuantum = quantum;
+                            if(hiloEnEjecucion != -1){
+                                for(int i = 0; i < 5; i++){
+                                    banderaFin[i] = 0;
+                                }
+                            }
+                            salida = 1;
+                        }
                         barrier.await();
 
                     } catch (InterruptedException ex) {
@@ -895,7 +916,7 @@ public class MIPS {
     }
 
     static void creaEstructuras(int cant) {
-
+        colaDeEjecucion = new int[cant];
         inicioInstHilos = new int[cant];
         regProcesos = new int[32][cant];
         RLProcesos = new int[cant];
@@ -903,7 +924,7 @@ public class MIPS {
         relojProcesos = new int[cant];
 
         for (int i = 0; i < cant; i++) {
-            RLProcesos[i] = 0;
+            RLProcesos[i] = -1;
             PCProcesos[i] = 0;
             relojProcesos[i] = 0;
             inicioInstHilos[i] = 0;
@@ -1105,6 +1126,36 @@ public class MIPS {
             pedirQuantum();
         }
     
+    }
+    static void cambioDeContexto(){
+        boolean si = false;
+        
+        for(int i =0; i < 32; i++){
+            regProcesos[i][hiloEnEjecucion] = registros[i];
+        }
+        PCProcesos[hiloEnEjecucion] = pc;
+        RLProcesos[hiloEnEjecucion] = -1;
+        
+        for(int n = 0; n < numHilos; n++){
+            if (!si && colaDeEjecucion[(hiloEnEjecucion + n) % numHilos] == 0){
+                hiloEnEjecucion = (hiloEnEjecucion + n) % numHilos;
+                si = true;
+            }           
+        }
+        
+        if(!si)
+        { hiloEnEjecucion = -1;
+        }
+        
+        if(si){
+            for(int i =0; i < 32; i++){
+                registros[i] = regProcesos[i][hiloEnEjecucion];
+        }
+        pc = PCProcesos[hiloEnEjecucion];
+        RL = RLProcesos[hiloEnEjecucion];
+            
+            
+        }
     }
 
 }
