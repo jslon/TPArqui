@@ -94,18 +94,17 @@ public class MIPS {
         //Hilos
         final Runnable instructionFetch = new Runnable() {
             public void run() {
-                while (HilosCompletados < numHilos) 
-                {
+                while (HilosCompletados < numHilos) {
                     while (banderaFin[0] == 0) {
 
                         // System.out.println("PC: " + pc);
                         // Copia la instrucción de la "memoria" al vector de instrucción de IF
-                        if(instruccionIF[0] != 64){
+                        if (instruccionIF[0] != 64) {
                             for (int i = 0; i < 4; i++) {
-                            instruccionIF[i] = instrucciones[(pc) + i];
+                                instruccionIF[i] = instrucciones[(pc) + i];
                             }
-                        
-                        pc += 4;
+
+                            pc += 4;
                         }
                         semPC.release();
 
@@ -172,8 +171,7 @@ public class MIPS {
 
         final Runnable instructionDecode = new Runnable() {
             public void run() {
-                while (HilosCompletados < numHilos) 
-                {
+                while (HilosCompletados < numHilos) {
                     while (banderaFin[1] == 0) {
                         int opCode = instruccionID[0];
                         int op1 = instruccionID[1];
@@ -420,8 +418,7 @@ public class MIPS {
 
         final Runnable execute = new Runnable() {
             public void run() {
-                while (HilosCompletados < numHilos) 
-                {
+                while (HilosCompletados < numHilos) {
                     while (banderaFin[2] == 0) {
                         int opCode = instruccionEX[0];
                         int op1 = instruccionEX[1];
@@ -466,11 +463,11 @@ public class MIPS {
                         }
                         if (opCode == 2) {                  //JR
                         }
-                        if (opCode == 50) {                  //LL
-                            resultado = ll(op2, op3);
+                        if (opCode == 50) {                 //LL
+                            resultado = ll(op1, op3);
                         }
                         if (opCode == 51) {                  //SC
-                            resultado = sc(op2, op3);
+                            resultado = sc(op1, op3);
                         }
 
                         if ((instruccionEX[0] == 63) || (instruccionEX[0] == 64)) {                  //FIN
@@ -517,8 +514,7 @@ public class MIPS {
 
         final Runnable memory = new Runnable() {
             public void run() {
-                while (HilosCompletados < numHilos) 
-                {
+                while (HilosCompletados < numHilos) {
                     while (banderaFin[3] == 0) {
 
                         int opCode = instruccionMEM[0];
@@ -527,8 +523,8 @@ public class MIPS {
                         int op3 = instruccionMEM[3];
                         int regDestino = instruccionMEM[4];
                         valMemoriaLW = resultadoEM;
-                        resultadoMem = resultadoEM;
-                        int bloque = (((resultadoMem - 768) / 4) / 4) % 8;
+                        resultadoMem = resultadoEM - 768;
+                        int bloque = (((resultadoMem) / 4) / 4) % 8;
                         /*
                          System.out.println("Instruccion en MEM:\t");
                          for (int i = 0; i < 4; i++) {
@@ -551,6 +547,7 @@ public class MIPS {
 
                         if (opCode == 43) {         //store
                             try {
+                                
                                 if (hitDeEscritura(resultadoMem)) {
                                     cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][bloque] = registros[regDestino];
                                     cache[5][bloque] = 1;               //pone el estado en modificado
@@ -574,29 +571,61 @@ public class MIPS {
                         }
 
                         if (opCode == 50) {                               //ll
-                            if (hitDeEscritura(resultadoMem)) {
-                                resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8];
-                                RL = resultadoMem;
-                            } else {
-                                resolverFalloDeCache(resultadoMem);
-                                resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8];
-                                RL = resultadoMem;
+                            try {
+                                if (hitDeEscritura(resultadoMem)) {
+
+                                    resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8];
+                                    RL = resultadoMem;
+                                } else {
+                                    resolverFalloDeCache(resultadoMem);
+                                    resultadoMem = cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8];
+                                    RL = resultadoMem;
+                                }
+                            } catch (java.lang.ArithmeticException exc) {
+                                if (hitDeEscritura(resultadoMem)) {
+
+                                    resultadoMem = cache[0][0];
+                                    RL = resultadoMem;
+                                } else {
+                                    resolverFalloDeCache(resultadoMem);
+                                    resultadoMem = cache[0][0];
+                                    RL = resultadoMem;
+                                }
+                                
                             }
 
                         }
 
                         if (opCode == 51) {                                 //sc
-                            if (hitDeEscritura(resultadoMem)) {
-                                if (RL != -1) {                  //si es atómico
-                                    if (resultadoMem == RL) {
-                                        cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8] = 1;
+                            try {
+                                if (hitDeEscritura(resultadoMem)) {
+                                    if (RL != -1) {                  //si es atómico
+                                        if (resultadoMem == RL) {
+                                            cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8] = 1;
+                                        }
+                                    }
+                                } else {
+                                    resolverFalloDeCache(resultadoMem);
+                                    if (RL != -1) {                  //si es atómico
+                                        if (resultadoMem == RL) {
+                                            cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8] = 1;
+                                        }
                                     }
                                 }
-                            } else {
-                                resolverFalloDeCache(resultadoMem);
-                                if (RL != -1) {                  //si es atómico
-                                    if (resultadoMem == RL) {
-                                        cache[(resultadoMem % (((resultadoMem / 4) / 4) * 4)) / 4][(resultadoMem / 4) % 8] = 1;
+                            } catch (java.lang.ArithmeticException exc) {
+
+                                if (hitDeEscritura(resultadoMem)) {
+                                    if (RL != -1) {                  //si es atómico
+                                        if (resultadoMem == RL) {
+                                            cache[0][0] = 1;
+                                        }
+                                    }
+                                } else {
+                                    resolverFalloDeCache(resultadoMem);
+                                    if (RL != -1) {                  //si es atómico
+                                        if (resultadoMem == RL) {
+                                            cache[0][0] = 1;
+                                        }
                                     }
                                 }
                             }
@@ -641,8 +670,7 @@ public class MIPS {
 
         final Runnable writeBack = new Runnable() {
             public void run() {
-                while (HilosCompletados < numHilos) 
-                {
+                while (HilosCompletados < numHilos) {
                     while (banderaFin[4] == 0) {
                         int opCode = instruccionWB[0];
                         int op1 = instruccionWB[1];
@@ -658,11 +686,10 @@ public class MIPS {
                          System.out.println("");
                          */
                         if ((instruccionWB[0] == 63) || (instruccionWB[0] == 64)) {
-                            if(instruccionWB[0] == 64){
+                            if (instruccionWB[0] == 64) {
                                 banderaFin[4] = 2;
-                                
-                            }
-                            else{
+
+                            } else {
                                 banderaFin[4] = 1;
                                 colaDeEjecucion[hiloEnEjecucion] = 1;
                                 HilosCompletados += 1;
@@ -693,7 +720,14 @@ public class MIPS {
 
                         }
                         if (opCode == 50) {         //ll
-                            registros[regDestino] = cache[resultadoMW % (((resultadoMW / 4) / 4) * 4)][(resultadoMW / 4) % 8];
+                            try{
+                                registros[regDestino] = cache[(resultadoMW % (((resultadoMW / 4) / 4) * 4)) / 4][(((resultadoMW) / 4) / 4) % 8];
+                            }
+                            catch(java.lang.ArithmeticException exc){
+                                registros[regDestino] = cache[0][0];
+                            }
+                            
+                            
 
                         }
                         if (opCode == 51) {         //sc
@@ -769,7 +803,7 @@ public class MIPS {
 
                 cargarInstrucciones();
                 contadorQuantum = quantum;
-                
+
                 semEsperaProc.drainPermits();
                 semMataProc.drainPermits();
                 semMataProc2.drainPermits();
@@ -786,7 +820,7 @@ public class MIPS {
                 new Thread(memory).start();
                 new Thread(writeBack).start();
 
-                while ((banderaFin[0] == 0 || banderaFin[1] == 0 || banderaFin[2] == 0 || banderaFin[3] == 0 || banderaFin[4] == 0) && (HilosCompletados < numHilos)) {
+                while (/*(banderaFin[0] == 0 || banderaFin[1] == 0 || banderaFin[2] == 0 || banderaFin[3] == 0 || banderaFin[4] == 0)*/HilosCompletados < numHilos) {
                     try {
                         barrier.await();
 
@@ -808,18 +842,18 @@ public class MIPS {
 
                         contadorQuantum--;
                         clock++;
-                        
-                        if(contadorQuantum == 0){
-                            for(int g = 0; g < 5; g++ ){
-                            instruccionIF[g] = 64;
+
+                        if (contadorQuantum == 0) {
+                            for (int g = 0; g < 4; g++) {
+                                instruccionIF[g] = 64;
                             }
                         }
-                        
-                        if(banderaFin[4] == 1 || banderaFin[4] == 2) {
+
+                        if (banderaFin[4] == 1 || banderaFin[4] == 2) {
                             cambioDeContexto();
                             contadorQuantum = quantum;
-                            if(hiloEnEjecucion != -1){
-                                for(int i = 0; i < 5; i++){
+                            if (hiloEnEjecucion != -1) {
+                                for (int i = 0; i < 5; i++) {
                                     banderaFin[i] = 0;
                                 }
                             }
@@ -832,9 +866,7 @@ public class MIPS {
                     } catch (BrokenBarrierException ex) {
                         Logger.getLogger(MIPS.class.getName()).log(Level.SEVERE, null, ex);
                     }
-
                 }
-
                 //imprimirVecInstrucciones();
                 imprimirRegistros();
                 imprimirCache();
@@ -945,20 +977,19 @@ public class MIPS {
             BufferedReader bf;//needed*
             int i = 0;
             String linea = "";
-            
 
             File directorio = new File(System.getProperty("user.dir"));
             loadEmp.setCurrentDirectory(directorio);
             loadEmp.setMultiSelectionEnabled(true);
             loadEmp.showOpenDialog(null);
             seleccionados = loadEmp.getSelectedFiles();
-            
+
             /*
-            seleccionados = loadEmp.getSelectedFiles();
-            if (1 == loadEmp.CANCEL_OPTION)
-            { System.exit(0);}
-            */
-            
+             seleccionados = loadEmp.getSelectedFiles();
+             if (1 == loadEmp.CANCEL_OPTION)
+             { System.exit(0);}
+             */
+            numHilos = seleccionados.length;
             int numHilo = 0;
             creaEstructuras(seleccionados.length);
 
@@ -984,7 +1015,10 @@ public class MIPS {
         catch (NullPointerException ex) {
         }
 
-        
+        for (int j = 0; j < inicioInstHilos.length; j++) {
+            PCProcesos[j] = inicioInstHilos[j];
+        }
+
         pedirQuantum();
     }
 
@@ -1014,7 +1048,7 @@ public class MIPS {
         }
         System.out.println("");
     }
-    
+
     static void imprimirVecDatos() {
         System.out.println("MEMORIA");
         for (int i = 0; i < datos.length; i++) {
@@ -1068,7 +1102,7 @@ public class MIPS {
     static boolean hitDeEscritura(int dir) {
         boolean x = false;
 
-        int bloque = (((dir - 768) / 4) / 4) % 8;
+        int bloque = (((dir) / 4) / 4) % 8;
         if (cache[4][bloque] == ((dir / 4) / 4)) { // si el bloque está en caché
 
             if (cache[5][bloque] == 1) { //modificado
@@ -1088,7 +1122,7 @@ public class MIPS {
         //System.out.println("Antes del Fallo \n");
 
         System.out.println("\n");
-        int bloque = (((dir - 768) / 4) / 4) % 8;
+        int bloque = (((dir) / 4) / 4) % 8;
 
         if (cache[5][bloque] == 1) { //modificado
 
@@ -1099,9 +1133,9 @@ public class MIPS {
         }
 
         for (int i = 0; i < 4; i++) {               //Sube los datos de memoria a cache
-            cache[i][bloque] = datos[(((dir - 768) / 4) / 4) * 4 + i]; // :)
+            cache[i][bloque] = datos[((dir / 4) / 4) * 4 + i]; // :)
         }
-        cache[4][bloque] = ((dir - 768) / 4) / 4;                   //cambia la etiqueta
+        cache[4][bloque] = ((dir) / 4) / 4;                   //cambia la etiqueta
         cache[5][bloque] = 2;                       // estado = compartido
         //System.out.println("Despues del Fallo \n");
         //imprimirCache();
@@ -1117,45 +1151,58 @@ public class MIPS {
         }
 
     }
-    
+
     static void pedirQuantum() {
-        try{JFrame frame = new JFrame("¥*¥");
-        String name = JOptionPane.showInputDialog(frame, "Cual es el quantum? Por favor ingrese un numero sino no saldra de aqui.");
-        quantum = Integer.parseInt(name);}
-        catch(Exception e){
+        try {
+            JFrame frame = new JFrame("¥*¥");
+            String name = JOptionPane.showInputDialog(frame, "Cual es el quantum? Por favor ingrese un numero sino no saldra de aqui.");
+            quantum = Integer.parseInt(name);
+        } catch (Exception e) {
             pedirQuantum();
         }
-    
+
     }
-    static void cambioDeContexto(){
+
+    static void cambioDeContexto() {
         boolean si = false;
-        
-        for(int i =0; i < 32; i++){
+
+        for (int i = 0; i < 32; i++) {
             regProcesos[i][hiloEnEjecucion] = registros[i];
         }
         PCProcesos[hiloEnEjecucion] = pc;
         RLProcesos[hiloEnEjecucion] = -1;
-        
-        for(int n = 0; n < numHilos; n++){
-            if (!si && colaDeEjecucion[(hiloEnEjecucion + n) % numHilos] == 0){
+
+        for (int n = 1; n <= numHilos; n++) {
+            if (!si && colaDeEjecucion[(hiloEnEjecucion + n) % numHilos] == 0) {
                 hiloEnEjecucion = (hiloEnEjecucion + n) % numHilos;
                 si = true;
-            }           
+            }
         }
-        
-        if(!si)
-        { hiloEnEjecucion = -1;
+
+        if (!si) {
+            hiloEnEjecucion = -1;
         }
-        
-        if(si){
-            for(int i =0; i < 32; i++){
+
+        if (si) {
+            for (int i = 0; i < 32; i++) {
                 registros[i] = regProcesos[i][hiloEnEjecucion];
+            }
+            pc = PCProcesos[hiloEnEjecucion];
+            RL = RLProcesos[hiloEnEjecucion];
+
         }
-        pc = PCProcesos[hiloEnEjecucion];
-        RL = RLProcesos[hiloEnEjecucion];
-            
-            
+        for (int y = 0; y < 4; y++) {
+            instruccionIF[y] = 0;
+            instruccionID[y] = 0;
+            instruccionEX[y] = 0;
+            instruccionMEM[y] = 0;
+            instruccionWB[y] = 0;
         }
+        instruccionID[4] = 0;
+        instruccionEX[4] = 0;
+        instruccionMEM[4] = 0;
+        instruccionWB[4] = 0;
+
     }
 
 }
