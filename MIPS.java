@@ -13,6 +13,9 @@ package mips;
 import java.lang.Thread;
 import java.io.*;
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.FileWriter;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.Semaphore;
@@ -75,6 +78,8 @@ public class MIPS {
     static int HilosCompletados = 0;                                            //Me indica cuantos hilos se han ejecutado.
     static int colaDeEjecucion[];                                               //Estructura que me permite llevar un control de los hilos que se han ejecutado y de los que aun les falta instrucciones
     static int result = 0;
+	
+	static int relojInicial = 0;                                                // Es para manejar por separado y sumarle cuanto tarda cada hilo en ejecutarse.
 
     public static void main(String[] args) {
 
@@ -912,7 +917,8 @@ public class MIPS {
 
                         contadorQuantum--;
                         clock++;
-
+						relojInicial++;
+						
                         if (contadorQuantum == 0) {
                             for (int g = 0; g < 4; g++) {
                                 instruccionIF[g] = 64;
@@ -924,6 +930,8 @@ public class MIPS {
                         }
 
                         if (banderaFin[4] == 1 || banderaFin[4] == 2) {
+							relojProcesos[hiloEnEjecucion] += relojInicial;
+							relojInicial = 0;
                             cacheAMemoria();
                             cambioDeContexto();
                             contadorQuantum = quantum;
@@ -947,6 +955,7 @@ public class MIPS {
                 imprimirCache();
                 cacheAMemoria();
                 imprimirVecDatos();
+				imprimeResultados();
 
                 System.out.println("El valor del reloj es: " + clock);
                 System.exit(clock);
@@ -1216,7 +1225,7 @@ public class MIPS {
     }
 
     static void imprimirVecDatos() {
-        System.out.println("MEMORIA");
+        System.out.println("MEMORIA :");
         for (int i = 0; i < datos.length; i++) {
             if (i % 10 == 0)             //Si es múltiplo de 4       
             {
@@ -1266,14 +1275,16 @@ public class MIPS {
     }
 
     static void imprimirCache() {
+         System.out.println("Cache de datos:");
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < 8; j++) {
                 System.out.print(cache[i][j] + "\t");
             }
             System.out.print("\n");
         }
-
+        System.out.println();
     }
+	
     /**
      *  Este metodo me indica si el bloque que necesito se encuentra en cache
      *  devuelve true si el bloque esta modificado o compartido
@@ -1328,6 +1339,63 @@ public class MIPS {
         //imprimirCache();
     }
 
+	static void imprimeResultados() {
+        FileWriter fichero = null;
+        PrintWriter pw = null;
+
+        for (int i = 0; i < numHilos; i++) {
+            String nombre = "Resultado-Hilo-" + i + ".txt";
+
+            try {
+                fichero = new FileWriter(nombre);
+                pw = new PrintWriter(fichero);
+
+                pw.println("Reloj del Hilo " + i + " = " + relojProcesos[i]);
+                pw.println("");
+
+                for (int j = 0; j < 32; j++) {
+                    pw.println("R" + j + " = " + regProcesos[j][i]);
+                }
+                pw.println("");
+
+                pw.println("RL = " + RLProcesos[i]);
+
+                fichero.close();
+            } catch (IOException e) {
+            }
+        }
+
+        try {
+            fichero = new FileWriter("Resultados-Memoria-Cache.txt");
+            pw = new PrintWriter(fichero);
+
+            pw.println("Cache de datos:");
+            for (int i = 0; i < 6; i++) {
+                for (int j = 0; j < 8; j++) {
+                    pw.print(cache[i][j] + "\t");
+                }
+                pw.println();
+            }
+            pw.println();
+
+            pw.println("MEMORIA :");
+            for (int i = 0; i < datos.length; i++) {
+                if (i % 10 == 0) //Si es múltiplo de 4       
+                {
+                    pw.println("");   //cambio de linea
+                }
+                pw.print(datos[i] + "\t");
+            }
+            pw.println("\n");
+
+            pw.println("El valor del reloj es: " + clock);
+            
+            fichero.close();
+        } catch (IOException e) {
+        }
+
+    }
+	
     /**
      * Este metodo copia un registro de cache a memoria, esto se utiliza cuando ocurre un fallo de cache 
      */
